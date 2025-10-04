@@ -86,7 +86,7 @@ export const errorHandler = (app: Elysia) =>
 					message: "Internal Server Error",
 					data: null,
 				};
-				case "UNKNOWN":
+			case "UNKNOWN":
 				set.status = 500;
 				// eslint-disable-next-line
 				ctxLog.error({ code, err: error }, "unknown error");
@@ -96,7 +96,7 @@ export const errorHandler = (app: Elysia) =>
 					message: "An unknown error occurred",
 					data: null,
 				};
-				case "VALIDATION":
+			case "VALIDATION":
 				set.status = 422;
 				return {
 					status: 422,
@@ -104,7 +104,7 @@ export const errorHandler = (app: Elysia) =>
 					message: "An unknown error occurred",
 					data: null,
 				};
-				default:
+			default:
 				// eslint-disable-next-line
 				ctxLog.error({ code, err: error }, "error occurred");
 				return error;

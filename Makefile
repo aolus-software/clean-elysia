@@ -27,6 +27,10 @@ help:
 	@echo "    db-pull     - Pull schema from database"
 	@echo "    db-studio   - Open Drizzle Studio"
 	@echo "    db-drop     - Drop all tables (dangerous!)"
+	@echo ""
+	@echo "  Database (ClickHouse):"
+	@echo "    migrate-clickhouse - Run ClickHouse migrations"
+	@echo "    migrate-clickhouse-status - Check status of ClickHouse migrations"
 
 # Development commands
 dev-api:
@@ -63,7 +67,13 @@ format:
 	bun run format
 
 db-seed:
-	bun run seed
+	bun run infra/seed/index.ts
+
+migrate-clickhouse:
+	bun run infra/clickhouse/scripts/migrate.ts migrate
+
+migrate-clickhouse-status:
+	bun run infra/clickhouse/scripts/migrate.ts status
 
 # Database commands
 # db-generate:

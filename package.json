@@ -16,14 +16,17 @@
 		"build:api": "bun build apps/apis/serve.ts --outdir=dist --target=node",
 		"lint": "bun run eslint . --ext .ts,.js",
 		"format": "bun run prettier --write .",
-		"seed": "bun run ./infra/seed/index.ts",
 		"prepare": "husky install",
 		"dev:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run dev:server\" \"bun run dev:worker\"",
 		"build:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run build:server\" \"bun run build:worker\"",
-		"start:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run start:server\" \"bun run start:worker\""
+		"start:all": "concurrently --names \"server,worker\" --prefix-colors \"blue,magenta\" \"bun run start:server\" \"bun run start:worker\"",
+		"db:postgres:seed": "bun run ./infra/seed/index.ts",
+		"migrate:clickhouse": "bun run infra/clickhouse/scripts/migrate.ts migrate",
+		"migrate:clickhouse:status": "bun run infra/clickhouse/scripts/migrate.ts status"
 	},
 	"dependencies": {
 		"@bogeychan/elysia-logger": "^0.1.10",
+		"@clickhouse/client": "^1.12.1",
 		"@elysiajs/cors": "^1.3.3",
 		"@elysiajs/jwt": "^1.3.2",
 		"@vinejs/vine": "^3.0.1",

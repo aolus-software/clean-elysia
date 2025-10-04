@@ -1,6 +1,38 @@
 # version: "3.8"
 
 services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.12
+    container_name: elysia-clickhouse
+    hostname: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_DB: app
+      CLICKHOUSE_USER: app
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      CLICKHOUSE_PASSWORD: secret
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+      # - ./infra/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      # - ./infra/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+      # - ./infra/clickhouse/init-scripts:/docker-entrypoint-initdb.d
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - app_network
+
   postgres:
     image: postgres:16
     container_name: elysia-postgres
@@ -66,6 +98,10 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  clickhouse_data:
+    driver: local
+  clickhouse_logs:
     driver: local
 
 networks:
