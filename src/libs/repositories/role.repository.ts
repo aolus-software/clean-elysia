@@ -1,19 +1,15 @@
-import { RoleList } from "@libs";
+import { db, DbTransaction, rolePermissions, roles } from "@database";
+import { defaultSort } from "@default";
+import { UnprocessableEntityError } from "@errors";
+import {
+	DatatableType,
+	PaginationResponse,
+	RoleList,
+	SortDirection,
+} from "@types";
+import { DatatableToolkit } from "@utils";
 import { and, asc, desc, eq, ilike, ne, not, or, SQL } from "drizzle-orm";
 import { NotFoundError } from "elysia";
-
-import {
-	DatatableToolkit,
-	DatatableType,
-	db,
-	DbTransaction,
-	defaultSort,
-	PaginationResponse,
-	rolePermissions,
-	roles,
-	SortDirection,
-	UnprocessableEntityError,
-} from "..";
 
 export const RoleRepository = () => {
 	const dbInstance = db;

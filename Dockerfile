@@ -14,8 +14,8 @@ RUN bun install --production --ignore-scripts
 COPY . .
 
 # Build the app (if needed)
-RUN bun run build:all
+RUN bun run build
 
 EXPOSE 3000
 
-CMD ["bun", "run", "start:all"]
+CMD ["bun", "run", "start"]

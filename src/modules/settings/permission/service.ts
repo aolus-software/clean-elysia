@@ -1,10 +1,6 @@
-import {
-	DatatableType,
-	db,
-	PaginationResponse,
-	PermissionList,
-	PermissionRepository,
-} from "@libs";
+import { db } from "@database";
+import { PermissionRepository } from "@repositories";
+import { DatatableType, PaginationResponse, PermissionList } from "@types";
 
 export const PermissionService = {
 	findAll: async (

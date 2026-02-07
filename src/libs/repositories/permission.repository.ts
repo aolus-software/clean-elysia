@@ -1,22 +1,15 @@
-// import { DatatableType, SortDirection } from "@app/apis/types/datatable";
-// import { PaginationResponse } from "@app/apis/types/pagination";
-// import { defaultSort } from "@default/sort";
-// import { NotFoundError, UnprocessableEntityError } from "@packages";
-import { and, asc, desc, eq, ilike, not, or, SQL } from "drizzle-orm";
-import { NotFoundError } from "elysia";
-
+import { db, DbTransaction, permissions } from "@database";
+import { defaultSort } from "@default";
+import { UnprocessableEntityError } from "@errors";
 import {
 	DatatableType,
-	db,
-	DbTransaction,
-	defaultSort,
 	PaginationResponse,
 	PermissionList,
-	permissions,
 	PermissionSelectOptions,
 	SortDirection,
-	UnprocessableEntityError,
-} from "..";
+} from "@types";
+import { and, asc, desc, eq, ilike, not, or, SQL } from "drizzle-orm";
+import { NotFoundError } from "elysia";
 
 export const PermissionRepository = () => {
 	const dbInstance = db;

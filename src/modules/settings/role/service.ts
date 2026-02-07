@@ -1,9 +1,5 @@
-import {
-	DatatableType,
-	PaginationResponse,
-	RoleList,
-	RoleRepository,
-} from "@libs";
+import { RoleRepository } from "@repositories";
+import { DatatableType, PaginationResponse, RoleList } from "@types";
 
 export const RoleService = {
 	findAll: async (

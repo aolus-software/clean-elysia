@@ -1,4 +1,4 @@
-import { db, permissions, roles } from "@libs";
+import { db, permissions, roles } from "@database";
 
 export const RBACSeeder = () => {
 	return db.transaction(async (tx) => {

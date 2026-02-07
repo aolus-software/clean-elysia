@@ -103,19 +103,20 @@
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */,
 
 		"paths": {
-			// "@": ["./src", "./src/*"],
-			"@libs": ["./src/libs", "./src/libs/*"],
-			"@modules": ["./src/modules", "./src/modules/*"],
+			"@base": ["./src/base.ts"],
+			"@bull": ["./src/bull", "./src/bull/*"],
+			"@cache": ["./src/libs/cache", "./src/libs/cache/*"],
 			"@config": ["./src/libs/config", "./src/libs/config/*"],
 			"@database": ["./src/libs/database", "./src/libs/database/*"],
 			"@default": ["./src/libs/default", "./src/libs/default/*"],
 			"@errors": ["./src/libs/errors", "./src/libs/errors/*"],
 			"@guards": ["./src/libs/guards", "./src/libs/guards/*"],
+			"@mailer": ["./src/libs/mailer", "./src/libs/mailer/*"],
 			"@plugins": ["./src/libs/plugins", "./src/libs/plugins/*"],
 			"@repositories": ["./src/libs/repositories", "./src/libs/repositories/*"],
+			"@types": ["./src/libs/types", "./src/libs/types/*"],
 			"@utils": ["./src/libs/utils", "./src/libs/utils/*"],
-			"@modules/*": ["./src/modules/*"],
-			"@bull": ["./src/bull", "./src/bull/*"]
+			"@modules": ["./src/modules", "./src/modules/*"]
 		}
 	}
 }

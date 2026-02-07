@@ -70,19 +70,76 @@ return await UserRepository().UserInformation(user.id);
 
 ### Import Organization
 
-Use absolute imports with path aliases configured in tsconfig.json:
+Use absolute imports with granular path aliases configured in tsconfig.json. Each directory in `src/libs` has its own dedicated alias:
 
 ```typescript
-import { UserRepository, Hash, BadRequestError } from "@libs";
+import { BadRequestError, UnauthorizedError } from "@errors";
+import { db, users, userRoles } from "@database";
+import { UserRepository } from "@repositories";
+import { Hash, log } from "@utils";
+import { UserInformation, DatatableType } from "@types";
+import { StrongPassword } from "@default";
+import { AuthPlugin } from "@plugins";
 import { eq, and, or } from "drizzle-orm";
 ```
 
-Group imports in this order:
+**Available Path Aliases:**
+
+- `@base` - Base Elysia app configuration
+- `@bull` - Queue and worker files
+- `@cache` - Cache utilities and constants
+- `@config` - Configuration files (AppConfig, DatabaseConfig, etc.)
+- `@database` - Database related (db instance, schemas, tables, RedisClient)
+- `@default` - Default constants (StrongPassword, paginationLength, etc.)
+- `@errors` - Custom error classes
+- `@guards` - Authorization guards (RoleGuard, PermissionGuard)
+- `@mailer` - Email services and templates
+- `@plugins` - Elysia plugins (AuthPlugin, SecurityPlugin, etc.)
+- `@repositories` - Repository pattern implementations
+- `@types` - TypeScript type definitions and interfaces
+- `@utils` - Utility functions (Hash, log, ResponseToolkit, etc.)
+- `@modules` - Application modules
+
+**Import Grouping Order:**
 
 1. External libraries (elysia, drizzle-orm, bullmq, etc.)
-2. Internal modules from @libs
-3. Internal modules from @modules
-4. Type imports
+2. Granular aliases by category:
+   - Configuration: `@config`
+   - Database: `@database`
+   - Errors: `@errors`
+   - Types: `@types`
+   - Repositories: `@repositories`
+   - Utils: `@utils`
+   - Others as needed
+3. Relative imports (if absolutely necessary)
+4. Type-only imports
+
+**Examples:**
+
+```typescript
+// Module service example
+import { BadRequestError } from "@errors";
+import { db, emailVerifications, users } from "@database";
+import { ForgotPasswordRepository, UserRepository } from "@repositories";
+import { Hash, log } from "@utils";
+import { UserInformation } from "@types";
+import { AuthMailService } from "@mailer";
+import { eq } from "drizzle-orm";
+
+// Module index example
+import { AuthPlugin } from "@plugins";
+import { JWT_CONFIG } from "@config";
+import { CommonResponseSchemas, ResponseToolkit } from "@utils";
+import { UserInformation } from "@types";
+import Elysia from "elysia";
+
+// Repository example
+import { BadRequestError, UnauthorizedError } from "@errors";
+import { db, DbTransaction, userRoles, users } from "@database";
+import { Hash } from "@utils";
+import { defaultSort } from "@default";
+import { DatatableType, PaginationResponse, UserInformation } from "@types";
+```
 
 ### File Naming
 

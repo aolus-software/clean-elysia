@@ -1,11 +1,8 @@
-import {
-	Cache,
-	db,
-	UnprocessableEntityError,
-	UserInformation,
-	UserInformationCacheKey,
-	UserRepository,
-} from "@libs";
+import { Cache, UserInformationCacheKey } from "@cache";
+import { db } from "@database";
+import { UnprocessableEntityError } from "@errors";
+import { UserRepository } from "@repositories";
+import { UserInformation } from "@types";
 import { NotFoundError } from "elysia";
 
 export const ProfileService = {

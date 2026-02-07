@@ -1,14 +1,13 @@
+import { db, users } from "@database";
+import { AuthMailService } from "@mailer";
+import { UserRepository } from "@repositories";
 import {
-	AuthMailService,
 	DatatableType,
-	db,
-	Hash,
 	PaginationResponse,
 	UserList,
-	UserRepository,
-	users,
 	UserStatusEnum,
-} from "@libs";
+} from "@types";
+import { Hash } from "@utils";
 import { eq } from "drizzle-orm";
 
 export const UserService = {

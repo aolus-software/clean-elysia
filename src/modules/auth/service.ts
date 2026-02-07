@@ -1,15 +1,9 @@
-import {
-	AuthMailService,
-	BadRequestError,
-	db,
-	emailVerifications,
-	ForgotPasswordRepository,
-	Hash,
-	log,
-	UserInformation,
-	UserRepository,
-	users,
-} from "@libs";
+import { db, emailVerifications, users } from "@database";
+import { BadRequestError } from "@errors";
+import { AuthMailService } from "@mailer";
+import { ForgotPasswordRepository, UserRepository } from "@repositories";
+import { UserInformation } from "@types";
+import { Hash, log } from "@utils";
 import { eq } from "drizzle-orm";
 
 export const AuthService = {

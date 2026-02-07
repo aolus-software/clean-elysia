@@ -1,13 +1,10 @@
+import { Cache, UserInformationCacheKey } from "@cache";
+import { JWT_CONFIG } from "@config";
 import bearer from "@elysiajs/bearer";
 import jwt from "@elysiajs/jwt";
-import {
-	Cache,
-	JWT_CONFIG,
-	UnauthorizedError,
-	UserInformation,
-	UserInformationCacheKey,
-	UserRepository,
-} from "@libs";
+import { UnauthorizedError } from "@errors";
+import { UserRepository } from "@repositories";
+import { UserInformation } from "@types";
 import Elysia from "elysia";
 
 export const AuthPlugin = new Elysia({ name: "auth" })

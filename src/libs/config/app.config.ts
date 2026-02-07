@@ -18,7 +18,7 @@ export const AppConfig: IAppConfig = {
 	APP_NAME: process.env.APP_NAME || "Elysia App",
 	APP_PORT: Number(process.env.APP_PORT) || 3000,
 	APP_URL: process.env.APP_URL || "http://localhost:3000",
-	APP_ENV: (process.env.APP_ENV || "development") as
+	APP_ENV: (process.env.NODE_ENV || "development") as
 		| "development"
 		| "staging"
 		| "production",

@@ -1,4 +1,4 @@
-import { AppConfig } from "@libs";
+import { AppConfig } from "@config";
 import * as CryptoJS from "crypto-js";
 
 export class EncryptionToolkit {

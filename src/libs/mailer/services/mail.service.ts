@@ -1,5 +1,6 @@
 import { AppConfig, MailConfig } from "@config";
-import { EmailOptions, log } from "@libs";
+import { EmailOptions } from "@types";
+import { log } from "@utils";
 import fs from "fs";
 import path from "path";
 

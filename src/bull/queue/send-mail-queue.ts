@@ -1,4 +1,4 @@
-import { RedisClient } from "@libs";
+import { RedisClient } from "@database";
 import { Queue } from "bullmq";
 
 const queueRedis = RedisClient.getQueueRedisClient();

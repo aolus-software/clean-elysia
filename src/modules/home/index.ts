@@ -1,11 +1,6 @@
-import {
-	AppConfig,
-	DateToolkit,
-	db,
-	RedisClient,
-	ResponseToolkit,
-	SuccessResponseSchema,
-} from "@libs";
+import { AppConfig } from "@config";
+import { db, RedisClient } from "@database";
+import { DateToolkit, ResponseToolkit, SuccessResponseSchema } from "@utils";
 import { Elysia, t } from "elysia";
 
 import { baseApp } from "../../base";

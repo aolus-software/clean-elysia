@@ -1,4 +1,5 @@
-import { AuthPlugin, ResponseToolkit } from "@libs";
+import { AuthPlugin } from "@plugins";
+import { ResponseToolkit } from "@utils";
 import Elysia from "elysia";
 
 import { SelectOptionService } from "./service";

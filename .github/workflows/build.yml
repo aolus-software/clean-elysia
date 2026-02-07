@@ -63,16 +63,11 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
       - name: Install dependencies (Bun)
         run: bun install
 
       - name: Install drizzle-kit (Node + npx)
-        run: npm install drizzle-kit
+        run: bun add -g drizzle-kit
 
       - name: Lint
         run: bun run lint
@@ -81,15 +76,12 @@ jobs:
         run: bun run format
 
       - name: Drizzle Generate
-        run: npx drizzle-kit generate --config=drizzle.config.ts
+        run: bunx drizzle-kit generate --config=drizzle.config.ts
 
       - name: Drizzle Migrate
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/elysia_db
-          # REDIS_HOST: localhost
-          # REDIS_PORT: 6379
-          # REDIS_PASSWORD: password123
-        run: npx drizzle-kit migrate --config=drizzle.config.ts
+        run: bunx drizzle-kit migrate --config=drizzle.config.ts
 
       - name: Clickhouse Migrate
         env:
@@ -102,28 +94,4 @@ jobs:
         run: bun run migrate:clickhouse:status
 
       - name: Build
-        run: bun run build:all
-
-  # docker-compose-up:
-  #   needs: build-and-lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
-
-  #     - name: Install Docker Compose
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get install -y docker-compose
-
-  #     - name: Docker Compose Up
-  #       run: docker-compose up -d
-
-  #     - name: Wait for services to be healthy
-  #       run: |
-  #         docker-compose ps
-  #         sleep 20
-  #         docker-compose ps
+        run: bun run build

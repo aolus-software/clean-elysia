@@ -1,4 +1,4 @@
-import { UserStatusEnum } from "@libs";
+import { UserStatusEnum } from "@database";
 import { t } from "elysia";
 
 export interface UserInformation {

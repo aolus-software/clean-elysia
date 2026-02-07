@@ -1,13 +1,13 @@
+import { PermissionGuard } from "@guards";
+import { AuthPlugin } from "@plugins";
+import { DatatableQueryParams } from "@types";
 import {
-	AuthPlugin,
 	CommonResponseSchemas,
-	DatatableQueryParams,
 	DatatableToolkit,
 	PaginatedResponseSchema,
-	PermissionGuard,
 	ResponseToolkit,
 	SuccessResponseSchema,
-} from "@libs";
+} from "@utils";
 import Elysia, { t } from "elysia";
 
 import { CreateRoleSchema, RoleListSchema, UpdateRoleSchema } from "./schema";

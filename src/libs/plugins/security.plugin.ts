@@ -1,5 +1,5 @@
+import { CORSConfig } from "@config";
 import cors from "@elysiajs/cors";
-import { CORSConfig } from "@libs";
 import { Elysia } from "elysia";
 import { helmet } from "elysia-helmet";
 import { rateLimit } from "elysia-rate-limit";

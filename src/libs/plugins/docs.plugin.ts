@@ -1,5 +1,5 @@
+import { AppConfig } from "@config";
 import openapi from "@elysiajs/openapi";
-import { AppConfig } from "@libs";
 import { Elysia } from "elysia";
 
 export const DocsPlugin = new Elysia({ name: "docs" }).use(

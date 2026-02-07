@@ -1,11 +1,11 @@
+import { JWT_CONFIG } from "@config";
 import { jwt } from "@elysiajs/jwt";
+import { UserInformation } from "@types";
 import {
 	CommonResponseSchemas,
-	JWT_CONFIG,
 	ResponseToolkit,
 	SuccessResponseSchema,
-	UserInformation,
-} from "@libs";
+} from "@utils";
 import Elysia, { t } from "elysia";
 
 import { baseApp } from "../../base";

@@ -1,4 +1,4 @@
-import { DatabaseConfig } from "@libs";
+import { DatabaseConfig } from "@config";
 import { ExtractTablesWithRelations } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { PgTransaction } from "drizzle-orm/pg-core";

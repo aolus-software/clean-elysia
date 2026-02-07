@@ -1,21 +1,12 @@
-.PHONY: help dev build start lint lint-fix format seed db-generate db-migrate db-push db-pull db-studio db-drop dev-worker build-worker start-worker dev-server build-server start-server dev-all build-all start-all
+.PHONY: help lint lint-fix format seed db-generate db-migrate db-push db-pull db-studio db-drop dev build start
 
 # Default target
 help:
 	@echo "Available commands:"
 	@echo "  Development:"
-	@echo "    dev-api         - Start API development server with hot reload"
-	@echo "    build-api       - Build the API application"
-	@echo "    start-api       - Start the API production server"
-	@echo "    dev-server      - Start SERVER development server with hot reload"
-	@echo "    build-server    - Build the SERVER application"
-	@echo "    start-server    - Start the SERVER production server"
-	@echo "    dev-worker      - Start WORKER development with hot reload"
-	@echo "    build-worker    - Build the WORKER application"
-	@echo "    start-worker    - Start the WORKER production service"
-	@echo "    dev-all         - Run server and worker in dev mode concurrently"
-	@echo "    build-all       - Build server and worker concurrently"
-	@echo "    start-all       - Run server and worker in production concurrently"
+	@echo "    dev             - Start development server with hot reload"
+	@echo "    build           - Build the application"
+	@echo "    start           - Start the production server"
 	@echo "    lint            - Run ESLint"
 	@echo "    lint-fix        - Fix linting issues automatically"
 	@echo "    format          - Format code with Prettier"
@@ -34,32 +25,14 @@ help:
 	@echo "    migrate-clickhouse-status - Check status of ClickHouse migrations"
 
 # Development commands
-dev-api:
-	bun run dev:api
+dev:
+	bun run dev
 
-build-api:
-	bun run build:api
+build:
+	bun run build
 
-start-api:
-	bun run start:api
-
-dev-server:
-	bun run dev:server
-
-build-server:
-	bun run build:server
-
-start-server:
-	bun run start:server
-
-dev-worker:
-	bun run dev:worker
-
-build-worker:
-	bun run build:worker
-
-start-worker:
-	bun run start:worker
+start:
+	bun run start
 
 lint:
 	bun run lint
@@ -98,32 +71,12 @@ db-studio:
 db-drop:
 	bunx drizzle-kit drop
 
-# db-generate:
-# 	npx drizzle-kit generate
-
-# db-migrate:
-# 	npx drizzle-kit migrate
-
-# db-push:
-# 	npx drizzle-kit push
-
-# db-pull:
-# 	npx drizzle-kit introspect
-
-# db-studio:
-# 	npx drizzle-kit studio
-
-# db-drop:
-# 	npx drizzle-kit drop
-
-dev-all:
-	bun run dev:all
-
-build-all:
-	bun run build:all
-
-start-all:
-	bun run start:all
+deploy-prepare:
+	@echo "Preparing deployment..."
+	bun install
+	bunx drizzle-kit migrate
+	bun run build
+	@echo "Deployment package is ready!"
 
 # Combined commands for common workflows
 fresh: db-drop db-push seed

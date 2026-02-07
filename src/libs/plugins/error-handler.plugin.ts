@@ -1,25 +1,14 @@
+import { Elysia } from "elysia";
+
 import {
 	BadRequestError,
 	ForbiddenError,
+	NotFoundError,
 	RateLimitError,
 	UnauthorizedError,
 	UnprocessableEntityError,
-} from "@errors";
-import { Elysia, NotFoundError } from "elysia";
-
+} from "../errors";
 import { LoggerPlugin } from "./logger.plugin";
-
-// Type definitions for Elysia validation errors
-interface ValidationError {
-	path?: string;
-	message?: string;
-}
-
-interface ValidationErrorDetails {
-	validator?: {
-		errors?: ValidationError[];
-	};
-}
 
 export const ErrorHandlerPlugin = new Elysia({
 	name: "error-handler",
@@ -28,7 +17,6 @@ export const ErrorHandlerPlugin = new Elysia({
 	.onError(({ code, error, set, log }) => {
 		if (error instanceof BadRequestError) {
 			set.status = 400;
-			log?.warn({ error: error.message, errors: error.error }, "Bad request");
 			return {
 				status: 400,
 				success: false,
@@ -39,10 +27,6 @@ export const ErrorHandlerPlugin = new Elysia({
 
 		if (error instanceof UnprocessableEntityError) {
 			set.status = 422;
-			log?.warn(
-				{ error: error.message, errors: error.error },
-				"Validation error",
-			);
 			return {
 				status: 422,
 				success: false,
@@ -53,7 +37,6 @@ export const ErrorHandlerPlugin = new Elysia({
 
 		if (error instanceof NotFoundError) {
 			set.status = 404;
-			log?.warn({ error: error.message }, "Not found");
 			return {
 				status: 404,
 				success: false,
@@ -64,7 +47,6 @@ export const ErrorHandlerPlugin = new Elysia({
 
 		if (error instanceof UnauthorizedError) {
 			set.status = 401;
-			log?.warn({ error: error.message }, "Unauthorized");
 			return {
 				status: 401,
 				success: false,
@@ -75,7 +57,6 @@ export const ErrorHandlerPlugin = new Elysia({
 
 		if (error instanceof ForbiddenError) {
 			set.status = 403;
-			log?.warn({ error: error.message }, "Forbidden");
 			return {
 				status: 403,
 				success: false,
@@ -86,7 +67,6 @@ export const ErrorHandlerPlugin = new Elysia({
 
 		if (error instanceof RateLimitError) {
 			set.status = 429;
-			log?.warn({ error: error.message }, "Rate limited");
 			return {
 				status: 429,
 				success: false,
@@ -97,23 +77,35 @@ export const ErrorHandlerPlugin = new Elysia({
 
 		if (code === "VALIDATION") {
 			set.status = 422;
-			log?.warn({ error }, "Request validation failed");
 
-			const validationError = error as ValidationErrorDetails;
-			const errors =
-				validationError?.validator?.errors?.map((err: ValidationError) => ({
-					field: err.path?.replace("/", "") || "unknown",
-					message: err.message || "Validation failed",
-				})) ?? [];
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const validationError = error as any;
+			const errors: { field: string; message: string }[] = [];
+
+			if (validationError.all && typeof validationError.all === "object") {
+				for (const err of validationError.all) {
+					errors.push({
+						field: err.path?.replace(/^\//, "") || "unknown",
+						message: err.message || "Validation failed",
+					});
+				}
+			}
+
+			if (!errors.length && validationError.valueError) {
+				errors.push({
+					field:
+						validationError.valueError.path?.replace(/^\//, "") || "unknown",
+					message: validationError.valueError.message || "Validation failed",
+				});
+			}
 
 			return {
 				status: 422,
 				success: false,
 				message: "Request validation failed",
-				errors:
-					errors.length > 0
-						? errors
-						: [{ field: "general", message: "Invalid request data" }],
+				errors: errors.length
+					? errors
+					: [{ field: "general", message: "Invalid request data" }],
 			};
 		}
 
@@ -146,4 +138,5 @@ export const ErrorHandlerPlugin = new Elysia({
 			message: "Internal Server Error",
 			data: null,
 		};
-	});
+	})
+	.as("global");

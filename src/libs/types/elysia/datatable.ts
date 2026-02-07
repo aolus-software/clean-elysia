@@ -1,4 +1,5 @@
-import { paginationLength, SortDirection } from "@libs";
+import { paginationLength } from "@default";
+import { SortDirection } from "@types";
 import { t } from "elysia";
 
 export type DatatableType = {

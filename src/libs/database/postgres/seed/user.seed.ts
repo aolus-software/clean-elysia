@@ -1,4 +1,5 @@
-import { db, Hash, roles, userRoles, users } from "@libs";
+import { db, roles, userRoles, users } from "@database";
+import { Hash } from "@utils";
 import { eq } from "drizzle-orm";
 
 export const UserSeeder = async () => {

@@ -1,10 +1,10 @@
+import { AuthPlugin } from "@plugins";
+import { UserInformationTypeBox } from "@types";
 import {
-	AuthPlugin,
 	CommonResponseSchemas,
 	ResponseToolkit,
 	SuccessResponseSchema,
-	UserInformationTypeBox,
-} from "@libs";
+} from "@utils";
 import Elysia, { t } from "elysia";
 
 import { ProfileService } from "./service";

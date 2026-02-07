@@ -12,17 +12,11 @@
 // import { StrToolkit } from "@toolkit/string";
 
 import { sendEmailQueue } from "@bull";
-import {
-	AppConfig,
-	db,
-	DbTransaction,
-	emailVerifications,
-	ForgotPasswordRepository,
-	log,
-	StrToolkit,
-	UserRepository,
-	verificationTokenLifetime,
-} from "@libs";
+import { AppConfig } from "@config";
+import { db, DbTransaction, emailVerifications } from "@database";
+import { verificationTokenLifetime } from "@default";
+import { ForgotPasswordRepository, UserRepository } from "@repositories";
+import { log, StrToolkit } from "@utils";
 
 export class AuthMailService {
 	async sendVerificationEmail(userId: string, tx?: DbTransaction) {

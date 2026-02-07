@@ -1,4 +1,5 @@
-import { log, RedisClient } from "@libs";
+import { RedisClient } from "@database";
+import { log } from "@utils";
 import Redis from "ioredis";
 
 class Cache {

@@ -1,4 +1,5 @@
-import { ForbiddenError, UserInformation } from "@libs";
+import { ForbiddenError } from "@errors";
+import { UserInformation } from "@types";
 
 export class PermissionGuard {
 	static canActivate(
