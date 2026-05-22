@@ -1,4 +1,4 @@
-import { LoggerOptions } from "@bogeychan/elysia-logger/dist/types";
+import { LoggerOptions } from "@bogeychan/elysia-logger/types";
 import { AppConfig } from "@config";
 import { destination, Logger, pino } from "pino";
 

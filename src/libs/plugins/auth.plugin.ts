@@ -7,7 +7,6 @@ import { UserRepository } from "@repositories";
 import { UserInformation } from "@types";
 import Elysia from "elysia";
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 export const AuthPlugin = new Elysia({ name: "auth" })
 	.use(jwt(JWT_CONFIG))
 	.use(bearer())
