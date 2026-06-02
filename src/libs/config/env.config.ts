@@ -27,6 +27,11 @@ export const env = cleanEnv(process.env, {
 	APP_CLUSTER_MODE: bool({ default: false }),
 	APP_CLUSTER_WORKERS: num({ default: 0 }),
 
+	// Reuse-port (SO_REUSEPORT) — run N independent processes on the same
+	// port and let the kernel load-balance. Alternative to cluster mode;
+	// do not enable both at once. Scale by launching N processes (e.g. PM2).
+	APP_REUSE_PORT: bool({ default: false }),
+
 	// Client
 	CLIENT_URL: url({ default: "http://localhost:3000" }),
 

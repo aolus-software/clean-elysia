@@ -74,7 +74,9 @@ services:
       retries: 3
 
   app:
-    build: .
+    build:
+      context: .
+      target: release
     container_name: elysia-app
     restart: unless-stopped
     environment:
@@ -83,7 +85,11 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: password123
       REDIS_DB: 0
-      PORT: 3000
+      APP_PORT: 3000
+      # In-container scaling. Use node-cluster here (one container, one port);
+      # set APP_REUSE_PORT instead if you scale via `docker compose up --scale app=N`.
+      APP_CLUSTER_MODE: "true"
+      APP_CLUSTER_WORKERS: 0
     ports:
       - "3000:3000"
     depends_on:

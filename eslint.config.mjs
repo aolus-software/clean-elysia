@@ -18,6 +18,7 @@ export default tseslint.config(
 			"**/interface/**/*",
 			"**/interfaces/**/*",
 			"/packages/db/clickhouse/repositories/interfaces/*.ts",
+			"ecosystem.config.cjs",
 		],
 	},
 
