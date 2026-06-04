@@ -9,12 +9,14 @@ FROM base AS install
 # dev deps (drizzle-kit, types, ...) — used by the dev image and migrations
 RUN mkdir -p /temp/dev
 COPY package.json bun.lock /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
+# --ignore-scripts: skips the "prepare" lifecycle (husky install) — git hooks
+# don't exist inside an image, and husky is a devDependency anyway.
+RUN cd /temp/dev && bun install --frozen-lockfile --ignore-scripts
 
 # prod-only deps — used by the release image
 RUN mkdir -p /temp/prod
 COPY package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
+RUN cd /temp/prod && bun install --frozen-lockfile --production --ignore-scripts
 
 # ===================================================
 # Stage 2: Development (hot reload)
@@ -48,6 +50,9 @@ COPY --from=install /temp/prod/node_modules node_modules
 # is the entry and honours APP_CLUSTER_MODE / APP_REUSE_PORT at runtime.
 COPY src ./src
 COPY tsconfig.json package.json drizzle.config.ts ./
+# pino writes to storage/logs/ relative to cwd — must exist and be writable
+# by the non-root `bun` user.
+RUN mkdir -p storage/logs && chown -R bun:bun storage
 
 USER bun
 EXPOSE 3000/tcp
