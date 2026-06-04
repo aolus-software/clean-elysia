@@ -15,7 +15,11 @@ const app = new Elysia()
 	.use(DocsPlugin)
 	.use(ErrorHandlerPlugin)
 	.use(bootstraps)
-	.listen(AppConfig.APP_PORT);
+	.listen(
+		AppConfig.APP_REUSE_PORT
+			? { port: AppConfig.APP_PORT, reusePort: true }
+			: AppConfig.APP_PORT,
+	);
 
 export default app.fetch;
 

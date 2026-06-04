@@ -16,6 +16,9 @@ interface IAppConfig {
 	APP_CLUSTER_MODE: boolean;
 	APP_CLUSTER_WORKERS: number;
 
+	// reuse-port
+	APP_REUSE_PORT: boolean;
+
 	// client
 	CLIENT_URL: string;
 }
@@ -33,6 +36,8 @@ export const AppConfig: IAppConfig = {
 
 	APP_CLUSTER_MODE: env.APP_CLUSTER_MODE,
 	APP_CLUSTER_WORKERS: env.APP_CLUSTER_WORKERS,
+
+	APP_REUSE_PORT: env.APP_REUSE_PORT,
 
 	CLIENT_URL: env.CLIENT_URL,
 };

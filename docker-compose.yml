@@ -9,10 +9,10 @@ services:
       - "8123:8123"
       - "9000:9000"
     environment:
-      CLICKHOUSE_DB: app
-      CLICKHOUSE_USER: app
+      CLICKHOUSE_DB: ${CLICKHOUSE_DATABASE:-app}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-app}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
-      CLICKHOUSE_PASSWORD: secret
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-secret}
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
@@ -38,9 +38,9 @@ services:
     container_name: elysia-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: elysia_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-elysia_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -49,7 +49,7 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -58,34 +58,39 @@ services:
     image: redis:7-alpine
     container_name: elysia-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass password123
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-password123}
     volumes:
       - redis_data:/data
     ports:
       - "6379:6379"
     networks:
       - app_network
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        [
+          "CMD-SHELL",
+          'redis-cli -a "${REDIS_PASSWORD:-password123}" ping | grep PONG',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
 
   app:
-    build: .
+    build:
+      context: .
+      target: release
     container_name: elysia-app
     restart: unless-stopped
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/elysia_db
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: password123
-      REDIS_DB: 0
-      PORT: 3000
+    # All app config comes from .env (compose also reads it for ${VAR}
+    # interpolation above). Inside the compose network use service hostnames:
+    #   DATABASE_URL=postgres://<user>:<pass>@postgres:5432/<db>
+    #   REDIS_HOST=redis, CLICKHOUSE_HOST=http://clickhouse:8123
+    # Scaling: APP_CLUSTER_MODE=true (one container, all cores) — or
+    # APP_REUSE_PORT=true if you scale via `docker compose up --scale app=N`.
+    env_file:
+      - .env
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:${APP_PORT:-3000}"
     depends_on:
       postgres:
         condition: service_healthy

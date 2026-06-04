@@ -7,6 +7,7 @@ const logFile = destination({
 	append: true,
 	write: true,
 	writable: true,
+	mkdir: true, // create storage/logs/ if missing (fresh checkout, docker image)
 	dest: isProd ? "storage/logs/app.log" : "storage/logs/app-dev.log",
 });
 

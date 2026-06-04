@@ -38,5 +38,7 @@ if (AppConfig.APP_CLUSTER_MODE && cluster.isPrimary) {
 	process.on("SIGINT", () => shutdown("SIGINT"));
 	process.on("SIGTERM", () => shutdown("SIGTERM"));
 } else {
-	await import("./server");
+	// PM2's Bun fork wrapper loads this file via require(), which cannot load
+	// async modules — avoid top-level await here.
+	void import("./server");
 }
