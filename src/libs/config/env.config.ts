@@ -23,6 +23,11 @@ export const env = cleanEnv(process.env, {
 		default: "info",
 	}),
 
+	// API docs (Scalar UI at /docs). Defaults to false so an environment that
+	// never sets it cannot expose the schema — this is the only switch, and it
+	// is deliberately independent of NODE_ENV.
+	ENABLE_API_DOCS: bool({ default: false }),
+
 	// Cluster
 	APP_CLUSTER_MODE: bool({ default: false }),
 	APP_CLUSTER_WORKERS: num({ default: 0 }),
