@@ -9,8 +9,8 @@ Runtime is **Bun** (not Node). Always prefer `bun run` / `bunx` over `npm`/`pnpm
 ```sh
 bun install                  # install deps
 bun run dev                  # hot-reload dev server on AppConfig.APP_PORT
-bun run build                # bundle ./src/index.ts to dist/server (node target)
-bun run start                # run dist/server/index.js
+bun run build                # bundle ./src/index.ts to dist/index.js (bun target)
+bun run start                # run dist/index.js
 bun run lint                 # eslint . --ext .ts,.js
 bun run lint:fix
 bun run format               # prettier --write .

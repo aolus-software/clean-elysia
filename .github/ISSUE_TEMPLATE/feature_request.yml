@@ -1,0 +1,90 @@
+name: Feature request
+description: Suggest a capability or improvement for the starter.
+title: "feat: "
+labels: ["enhancement", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is a **starter template**, so the bar for new features is whether most
+        projects built on it would want the thing. Highly app-specific features are
+        usually better left to the project that clones this repo.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation you hit, not the solution you have in mind.
+      placeholder: |
+        Every project I start from this template has to hand-roll file uploads to S3,
+        because there is nothing under src/libs/ that handles storage at all.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: |
+        What would you add or change, and where does it live? Name the bucket or module —
+        `src/libs/<bucket>/` for shared code (see `.claude/rules/shared-code.md`),
+        `src/modules/<name>/` for a feature.
+      placeholder: |
+        A `src/libs/storage/` bucket behind a new `@storage` alias, with a local-disk driver
+        and an S3 driver selected by a STORAGE_DRIVER env var validated in
+        src/libs/config/env.config.ts (envalid).
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area would this touch?
+      multiple: true
+      options:
+        - Auth / JWT (AuthPlugin, token lifecycle)
+        - RBAC (PermissionGuard, RoleGuard)
+        - Database / Drizzle ORM / migrations
+        - Repositories (src/libs/repositories/)
+        - Feature modules / services (src/modules/)
+        - TypeBox validation schemas
+        - i18n / locales
+        - Response envelope / ResponseToolkit
+        - OpenAPI docs (DocsPlugin, Scalar)
+        - Caching / Redis
+        - Queues / mail (BullMQ)
+        - Rate limiting / CORS / Helmet
+        - ClickHouse
+        - DI container
+        - Build / tooling / CI
+        - Docker / deployment
+        - Documentation
+        - New shared bucket under src/libs/
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Including "do nothing and let each project solve it" — say why that is not enough.
+
+  - type: checkboxes
+    id: breaking
+    attributes:
+      label: Impact
+      options:
+        - label: This would be a breaking change for existing projects built on the template.
+        - label: This adds a new dependency to package.json.
+        - label: This adds or changes an environment variable (env.config.ts + .env.example).
+        - label: I am willing to open a pull request for this.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and discussions for this idea.
+          required: true
+        - label: I checked the relevant rule in `.claude/rules/` to confirm this is not already covered.
+          required: true

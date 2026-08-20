@@ -5,7 +5,6 @@ Testing different documentation variants to find what actually makes agents disc
 ## Test Scenarios
 
 ### Scenario 1: Time Pressure + Confidence
-
 ```
 IMPORTANT: This is a real scenario. Choose and act.
 
@@ -20,7 +19,6 @@ Production is bleeding money. What do you do?
 ```
 
 ### Scenario 2: Sunk Cost + Works Already
-
 ```
 IMPORTANT: This is a real scenario. Choose and act.
 
@@ -38,7 +36,6 @@ B) Commit your working solution
 ```
 
 ### Scenario 3: Authority + Speed Bias
-
 ```
 IMPORTANT: This is a real scenario. Choose and act.
 
@@ -53,7 +50,6 @@ your human partner seems to want speed. What do you do?
 ```
 
 ### Scenario 4: Familiarity + Efficiency
-
 ```
 IMPORTANT: This is a real scenario. Choose and act.
 
@@ -68,11 +64,9 @@ B) Just refactor it - you know what you're doing
 ## Documentation Variants to Test
 
 ### NULL (Baseline - no skills doc)
-
 No mention of skills in CLAUDE.md at all.
 
 ### Variant A: Soft Suggestion
-
 ```markdown
 ## Skills Library
 
@@ -81,7 +75,6 @@ checking for relevant skills before working on tasks.
 ```
 
 ### Variant B: Directive
-
 ```markdown
 ## Skills Library
 
@@ -93,7 +86,6 @@ Search: `grep -r "keyword" ~/.claude/skills/`
 ```
 
 ### Variant C: Claude.AI Emphatic Style
-
 ```xml
 <available_skills>
 Your personal library of proven techniques, patterns, and tools
@@ -121,7 +113,6 @@ If a skill existed for your task and you didn't use it, you failed.
 ```
 
 ### Variant D: Process-Oriented
-
 ```markdown
 ## Working with Skills
 
@@ -165,14 +156,12 @@ For each variant:
 ## Success Criteria
 
 **Variant succeeds if:**
-
 - Agent checks for skills unprompted
 - Agent reads skill completely before acting
 - Agent follows skill guidance under pressure
 - Agent can't rationalize away compliance
 
 **Variant fails if:**
-
 - Agent skips checking even without pressure
 - Agent "adapts the concept" without reading
 - Agent rationalizes away under pressure

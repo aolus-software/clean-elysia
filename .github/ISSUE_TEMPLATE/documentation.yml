@@ -1,0 +1,69 @@
+name: Documentation issue
+description: Something in the docs is wrong, missing, or misleading.
+title: "docs: "
+labels: ["documentation", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The written docs here describe real commands, real paths, and real conventions.
+        A doc that contradicts the code is a bug, so thank you for reporting it.
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Which document?
+      multiple: true
+      options:
+        - README.md
+        - CLAUDE.md
+        - .claude/rules/ (shared-code, modules, repositories, openapi, queue, di)
+        - .github/copilot-instructions.md
+        - docs/CONFIGURATION.md (env var reference)
+        - docs/PLUGINS.md
+        - docs/ERROR_HANDLING.md
+        - docs/SECURITY.md (API security guide)
+        - docs/API_DOCUMENTATION.md
+        - docs/DEPLOYMENT.md
+        - .github/CONTRIBUTING.md / SECURITY.md / issue templates
+        - OpenAPI reference served at /docs (route detail, summaries, schema examples)
+        - Code comments
+        - .env.example
+        - Makefile help output
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Specific location
+      description: File and line, or the heading / command name.
+      placeholder: 'README.md, "Database Setup" section — or .claude/rules/modules.md:24'
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: Quote what it says now and explain what the code actually does.
+      placeholder: |
+        CLAUDE.md says `bun run build` bundles to `dist/server`, but the build script in
+        package.json writes `./dist/index.js` while `bun run start` runs `./dist/server/index.js`.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested correction
+      description: Optional, but a concrete rewrite is the fastest path to a fix.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I verified against the code on `main`, not against an older clone.
+          required: true

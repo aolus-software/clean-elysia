@@ -1,0 +1,66 @@
+# Documentation Upkeep Rule
+
+## Principle: docs are part of the change, not an afterthought
+
+When a change makes a documentation file wrong, fixing that doc belongs to the **same change** — not
+a follow-up, not "later". Code and docs are committed together so the repository never carries
+documentation that contradicts the code.
+
+This is not a mandate to rewrite docs on every commit. It is: **if you changed something a doc
+describes, update that doc in the same change.** If nothing a doc covers changed, leave it alone.
+
+This is about *keeping existing documentation true*, not about *inventing* new documentation. Do not
+create new `.md` files nobody asked for — but never leave a doc contradicting the code you just
+wrote.
+
+## Docs that must stay in sync
+
+| Doc | Update it when… |
+|---|---|
+| `README.md` | setup steps, `package.json` scripts, env vars, the project-structure tree, the Docker section, or the layer/architecture summary change — its "Scripts" and "Makefile Commands" sections quote both `package.json` and the `Makefile` verbatim |
+| `CLAUDE.md` | a path alias, the bootstrap order, the layering description, a convention, a `docs/` reference, or a new module / plugin / runtime surface changes |
+| `Makefile` | a canonical command is added, renamed, or removed. Three places move together: the `.PHONY` line, the `help:` target's `@echo` block, and the recipe itself. This covers the whole Docker suite (`docker-build`, `docker-up`, `docker-down`, `docker-restart`, `docker-logs`, `docker-ps`, `docker-migrate`, `docker-seed`, `docker-deploy`) and the combined workflows (`fresh`, `reset`) — plus `README.md`, which quotes them |
+| `docker-compose.yml`, `Dockerfile` | a service, port, volume, or build stage changes — `docker-migrate` / `docker-seed` build the `migrator` target and join `$(DOCKER_NETWORK)`, so a renamed stage or network breaks the `Makefile` too |
+| `.env.example` | any new env var — it is the only list a new developer copies from, and `docs/CONFIGURATION.md` plus the `README.md` configuration section describe the same set |
+| `src/libs/config/env.config.ts` | a new env var is read. It is validated in `cleanEnv(...)` there or nowhere; `process.env` is never read directly elsewhere. Add it to the envalid schema, then to `.env.example` and `docs/CONFIGURATION.md` |
+| `src/libs/database/postgres/schema/**` + `migrations/` | a table, column, enum, or relation changes — run `bun run db:generate` then `bun run db:migrate` (or `make reset`). Never hand-edit an already-applied migration or its `migrations/meta/` journal. If the change alters what a fresh database needs, `src/libs/database/postgres/seed/` moves with it |
+| `docs/API_DOCUMENTATION.md` | a route is added, renamed, re-gated, or removed, or its request/response shape changes |
+| `docs/CONFIGURATION.md` | the env var reference drifts from `env.config.ts` / `.env.example` |
+| `docs/DEPLOYMENT.md` | the Docker/compose flow, the migrator image, or the deploy sequence changes |
+| `docs/ERROR_HANDLING.md` | an error class is added to `src/libs/errors/` or `ErrorHandlerPlugin`'s status mapping / response shape changes |
+| `docs/PLUGINS.md` | a plugin is added to `src/libs/plugins/`, or `baseApp` (`src/base.ts`) gains or drops one |
+| `docs/SECURITY.md` | auth, guards, rate limiting, CORS, headers, or body limits change |
+| `docs/README.md` | a file is added to or removed from `docs/` — it is the index |
+| `src/libs/i18n/locales/{en,id}.json` | a user-facing string is added — **both languages, in the same change**, then regenerate the key union with `bun run i18n:keys` (`src/libs/i18n/locales/keys.generated.ts` is generated, never hand-edited) |
+| `tsconfig.json` `paths` | a new `src/libs/<bucket>/` is added — the alias list in `CLAUDE.md` and the bucket table in `.claude/rules/shared-code.md` must match it |
+| `.claude/rules/*.md` | a coded convention changes, or a new pattern ships with no rule yet — write one. The current set is `contradiction-halt.md`, `documentation.md`, `audit-findings.md`, `di.md`, `modules.md`, `openapi.md`, `queue.md`, `repositories.md`, `shared-code.md` |
+| `.claude/commands/*.md` | a command's workflow or scope changes |
+| `.github/copilot-instructions.md` | a convention it illustrates changes — it mirrors `CLAUDE.md`'s repository/service/queue examples and drifts silently |
+
+## What "up to date" means
+
+- **Exact facts.** Path aliases, route paths, table and column names, env var names, permission
+  strings, `package.json` scripts, and `make` targets must match reality. A stale env var name or a
+  renamed helper is a documentation bug, not a nitpick.
+- **No orphan references.** If you rename, move, or delete a file, function, permission, alias, or
+  rule, update every doc that names it. Do not leave pointers to things that no longer exist.
+- **Permission strings are quoted verbatim.** They are space-separated (`"user list"`,
+  `"role create"`, `"permission delete"`), generated by `RBACSeeder` as `<group> <action>`. A doc or
+  a route that invents a different spelling is a defect, not a variant.
+- **New surfaces get docs.** A new plugin, guard, queue/worker pair, repository, or external
+  integration that establishes a pattern needs its rule written, not just its code.
+- **The OpenAPI spec is documentation.** It is generated from route metadata at runtime by
+  `DocsPlugin`, so a route is undocumented unless it declares `detail: { summary, description }` and
+  `response: commonResponse(...)` / `commonPaginatedResponse(...)` with an `include` array listing
+  every status code it can actually return. A public module must set `security: []` to clear the
+  global bearer requirement. An endpoint that works but is wrong in `/docs` is an incomplete change.
+  See `.claude/rules/openapi.md`.
+- **Barrel exports are part of the contract.** A new file under `src/libs/<bucket>/` that is not
+  re-exported from that bucket's `index.ts` will not resolve through its alias — see
+  `.claude/rules/shared-code.md`.
+
+## When a doc is wrong but the current task didn't cause it
+
+Per `contradiction-halt.md`, if you notice a doc contradicting the code but fixing it falls outside
+the requested task, **report it to the user** — do not silently rewrite unrelated docs. The
+"update in the same change" duty covers the docs your own change affects.

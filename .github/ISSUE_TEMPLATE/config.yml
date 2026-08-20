@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/aolus-software/clean-elysia/discussions
+    about: Ask how to do something with the starter — modules, repositories, guards, queues, deployment. Questions filed as issues will be converted to discussions.
+  - name: Report a security vulnerability
+    url: https://github.com/aolus-software/clean-elysia/security/advisories/new
+    about: Report privately through GitHub Security Advisories. Never open a public issue for a vulnerability.
+  - name: API security reference
+    url: https://github.com/aolus-software/clean-elysia/blob/main/docs/SECURITY.md
+    about: How auth, RBAC, rate limiting, and validation work in this starter. Read this before asking whether a behaviour is intended.

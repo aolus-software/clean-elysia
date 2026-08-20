@@ -1,0 +1,112 @@
+name: Bug report
+description: Something in the starter behaves incorrectly or crashes.
+title: "bug: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. Please fill in what you can —
+        a reproduction is worth more than a long description.
+
+        **Do not report security vulnerabilities here.** See [SECURITY.md](https://github.com/aolus-software/clean-elysia/blob/main/.github/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you observe, and what did you expect instead?
+      placeholder: |
+        POST /auth/register with an email that already exists returns 500 instead of 422.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that triggers it. Include the request and response if it is an HTTP issue.
+      placeholder: |
+        1. cp .env.example .env
+        2. docker compose up -d postgres redis
+        3. bun install
+        4. make db-migrate && make db-seed
+        5. bun run dev
+        6. curl -X POST localhost:3000/auth/register -H 'Content-Type: application/json' -d '{"email":"a@b.c"}'
+        7. Observe 500
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error output
+      description: Paste the pino output or the response body. This is rendered as code, no backticks needed.
+      render: shell
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this affect?
+      multiple: true
+      options:
+        - Auth / JWT (login, register, verify, reset password, AuthPlugin)
+        - RBAC (PermissionGuard, RoleGuard, beforeHandle gating)
+        - Database / Drizzle ORM / migrations (src/libs/database/postgres/)
+        - Repositories (src/libs/repositories/)
+        - Feature modules / services (src/modules/)
+        - TypeBox validation schemas (schema.ts)
+        - i18n / locales (src/libs/i18n/)
+        - Response envelope / ResponseToolkit / commonResponse
+        - OpenAPI docs (DocsPlugin, Scalar at /docs)
+        - Caching / Redis
+        - Queues / mail (BullMQ, src/bull/)
+        - Rate limiting / CORS / Helmet (SecurityPlugin)
+        - ClickHouse (optional analytics database)
+        - DI container (src/bootstrap.ts, @plugins container)
+        - Build / tooling / CI (bun build, eslint, prettier, husky)
+        - Docker / deployment (Dockerfile, docker-compose.yml, ecosystem.config.cjs)
+        - Documentation
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      description: "Output of `git rev-parse --short HEAD`"
+      placeholder: a1b2c3d
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Run these and paste the output:
+        `bun --version`, `bunx drizzle-kit --version`, and your OS.
+        Bun is the runtime here — Node is only relevant if you deploy the built bundle differently.
+      placeholder: |
+        Bun: 1.3.x
+        Drizzle Kit: 0.31.x
+        Elysia: 1.4.x
+        OS: macOS 15 / Ubuntu 24.04
+        Postgres: 18.1 (docker-compose)
+        Redis: 7-alpine (docker-compose)
+        Running via: bun run dev | bun run build + bun run start | docker compose
+      render: shell
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I am running against the Postgres and Redis versions in `docker-compose.yml`.
+          required: true
+        - label: I ran `bun install` and applied migrations (`make db-migrate`) before reproducing.
+          required: true
