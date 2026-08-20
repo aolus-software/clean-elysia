@@ -7,7 +7,7 @@ import { Elysia } from "elysia";
  */
 export const BodyLimitPlugin = new Elysia({
 	name: "body-limit",
-}).onBeforeHandle(({ request, set }) => {
+}).onBeforeHandle({ as: "global" }, ({ request, set }) => {
 	const contentLength = request.headers.get("content-length");
 	const maxSize = 100 * 1024; // 100KB
 
