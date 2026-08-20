@@ -100,13 +100,13 @@ export const RoleModule = new Elysia({
 		},
 		{
 			beforeHandle: ({ user }) => {
-				PermissionGuard.canActivate(user, ["role update"]);
+				PermissionGuard.canActivate(user, ["role edit"]);
 			},
 			body: UpdateRoleSchema,
 			detail: {
 				summary: "Update role",
 				description:
-					"Update the details of an existing role. Requires 'role update' permission.",
+					"Update the details of an existing role. Requires 'role edit' permission.",
 			},
 			response: commonResponse(t.Null(), {
 				include: [200, 400, 401, 403, 404, 500],
