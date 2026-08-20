@@ -158,7 +158,7 @@ export const AuthService = {
 	resetPassword: async (token: string, password: string): Promise<void> => {
 		const passwordReset = await ForgotPasswordRepository().findByToken(token);
 
-		if (!passwordReset) {
+		if (!passwordReset || passwordReset.expired_at < new Date()) {
 			throw new BadRequestError(t("auth.validationError"), [
 				{
 					field: "token",

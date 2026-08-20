@@ -1,7 +1,7 @@
 import { sendEmailQueue } from "@bull";
 import { AppConfig } from "@config";
 import { db, DbTransaction, emailVerifications } from "@database";
-import { verificationTokenLifetime } from "@default";
+import { resetPasswordLifetime, verificationTokenLifetime } from "@default";
 import { getCurrentLocale, t } from "@i18n";
 import { ForgotPasswordRepository, UserRepository } from "@repositories";
 import { log, StrToolkit } from "@utils";
@@ -16,7 +16,7 @@ export class AuthMailService {
 		await dbInstance.insert(emailVerifications).values({
 			token,
 			user_id: user.id,
-			expired_at: verificationTokenLifetime,
+			expired_at: verificationTokenLifetime(),
 		});
 
 		// Queue email instead of blocking
@@ -47,6 +47,7 @@ export class AuthMailService {
 		await ForgotPasswordRepository().create({
 			user_id: user.id,
 			token,
+			expired_at: resetPasswordLifetime(),
 		});
 
 		// Queue email instead of blocking
