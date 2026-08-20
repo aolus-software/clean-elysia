@@ -52,13 +52,17 @@ This applies whether the contradiction is with:
 These are confirmed in this repository and awaiting a decision. Do not build on any of them without
 raising it first:
 
-- **Password-reset links never expire.**
-  `src/libs/database/postgres/schema/password-reset-token.ts` declares `password_reset_tokens` with
-  `id`, `user_id`, `token`, `created_at`, and `updated_at` — there is no `expired_at` column — and
-  `AuthService.resetPassword` (`src/modules/auth/service.ts`) only looks the token up via
-  `ForgotPasswordRepository().findByToken(token)` and rejects it when the row is missing. Nothing
-  checks age, so a reset link stays valid until it is used. Adding an expiry is a schema change plus
-  a migration plus a check in `resetPassword`; do not "just add the check" without raising it.
+- **~~Password-reset links never expire.~~ ✅ RESOLVED 2026-08-20.** `password_reset_tokens` now has
+  an `expired_at` column, `AuthMailService.sendResetPasswordEmail` sets it from
+  `resetPasswordLifetime()`, and `AuthService.resetPassword` rejects an expired row the way
+  `verifyEmail` already did. The migration deletes pre-existing rows, since a token issued before
+  expiry existed has unknown age and unlimited validity.
+
+  Fixing it surfaced a second bug worth remembering: the lifetimes in
+  `src/libs/default/token-lifetime.ts` were **constants evaluated at module load**, so
+  `verificationTokenLifetime` meant "process start + 1 hour" and every verification token minted
+  after the first hour of uptime was issued already expired. They are functions now. A date constant
+  at module scope is almost always this bug.
 
 - **The `.agents/skills/` bundle is a generation behind its sibling repositories.**
   `.claude/skills` is a symlink to `.agents/skills`. Treat the bundle as vendored: do not edit it as

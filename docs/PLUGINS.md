@@ -192,9 +192,9 @@ import { AppConfig } from "@config";
 
 const app = new Elysia();
 
-if (AppConfig.APP_ENV !== "production") {
-	app.use(DocsPlugin);
-}
+// DocsPlugin is always mounted; it serves nothing unless ENABLE_API_DOCS is on.
+// Do not add an environment check here — the flag is the single switch.
+app.use(DocsPlugin);
 ```
 
 ## Plugin Lifecycle Hooks

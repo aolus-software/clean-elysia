@@ -1,6 +1,8 @@
 # Rule: OpenAPI / Swagger documentation
 
-The API spec is generated from Elysia route metadata at runtime by `DocsPlugin` (`src/libs/plugins/docs.plugin.ts`, powered by `@elysiajs/openapi` with the Scalar provider). It's served at `/docs` and `/docs/openapi.json`, and **disabled in production** (`enabled: AppConfig.APP_ENV !== "production"`).
+The API spec is generated from Elysia route metadata at runtime by `DocsPlugin` (`src/libs/plugins/docs.plugin.ts`, powered by `@elysiajs/openapi` with the Scalar provider). It's served at `/docs` and `/docs/openapi.json`, gated on a single flag: `enabled: AppConfig.ENABLE_API_DOCS`, from the `ENABLE_API_DOCS` environment variable.
+
+That flag **defaults to `false`**, so an environment that never sets it cannot expose the schema, and it is deliberately **independent of `NODE_ENV`** — docs can be turned on for a staging box without pretending it is a development environment, and cannot be published by accident just by shipping with `NODE_ENV=staging`. It replaced an `APP_ENV !== "production"` check, which published the schema on every non-production deployment. Don't reintroduce an environment check alongside it; the flag is the whole switch.
 
 You don't write OpenAPI YAML by hand. Every documentation field comes from how routes are declared.
 

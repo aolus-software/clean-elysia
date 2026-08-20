@@ -102,16 +102,19 @@ parent.
 ## Token tables need expiry and single-use
 
 A token table carries at minimum `token`, `user_id`, and `expired_at`, and the consuming service must
-compare `expired_at` against now. `email_verifications` does this correctly.
+compare `expired_at` against now. Both `email_verifications` and `password_reset_tokens` do this —
+the latter since 2026-08-20, when the column and the check in `AuthService.resetPassword` were added.
 
-`password_reset_tokens` **does not have an `expired_at` column**, and `AuthService.resetPassword`
-performs no expiry comparison — a reset link there is valid forever until used. Do not copy that table
-as a template, and do not add a new token table without expiry. Fixing it is a migration, so it is
-tracked rather than done silently — see [contradiction-halt.md](./contradiction-halt.md).
+**Set the expiry by calling a lifetime function, never by reading a constant.** The helpers in
+`src/libs/default/token-lifetime.ts` are functions —
+`verificationTokenLifetime()`, `resetPasswordLifetime()` — because they used to be module-scope
+constants, which froze the expiry at "process start + 1 hour" and made every token minted after the
+first hour of uptime already expired on arrival. A `Date` computed at module scope is almost always
+that bug.
 
-Prefer a unique index on `token` and a `used_at` column for new token tables: deleting the row after
-consumption (the current approach) works but loses the audit trail, and a failed delete leaves the
-token live.
+Still open for new tables: prefer a unique index on `token` and a `used_at` column. Deleting the row
+after consumption (the current approach in both tables) works but loses the audit trail, and a failed
+delete leaves the token live.
 
 ## Relations
 
