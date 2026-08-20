@@ -15,22 +15,41 @@ These apply to **every** change, regardless of which files it touches. Read them
 | [contradiction-halt.md](./contradiction-halt.md) | A request that contradicts a rule, the architecture, or a security invariant is reported and halted — never silently implemented or worked around. Lists the issues already on record |
 | [documentation.md](./documentation.md) | A doc your change makes wrong is fixed in the **same** change; lists every doc that must stay in sync |
 | [audit-findings.md](./audit-findings.md) | How an audit finding is written: five blocks, plain language, severity by consequence, CONFIRMED vs SUSPECT — the writing contract for [`/audit-flow`](../commands/audit-flow.md) |
+| [clean-code.md](./clean-code.md) | Formatting, explicit types, no `any`, no `console.*`, comment density |
+| [elysia.md](./elysia.md) | Layering (`handler → service → repository`), reuse-before-you-build, config and logging |
 
 ## Layer rules
 
+Ordered outside-in, the way a request travels.
+
 | Rule | Applies to |
 | ---- | ---------- |
-| [modules.md](./modules.md) | `src/modules/<name>/` — the three-file layout (`index.ts` routes, `schema.ts` TypeBox, `service.ts` plain object), `baseApp` / `AuthPlugin` composition, guards in `beforeHandle` |
+| [modules.md](./modules.md) | `src/modules/<name>/` — the three-file layout (`index.ts` routes, `schema.ts` TypeBox, `service.ts` plain object) and how modules compose |
+| [handlers.md](./handlers.md) | `src/modules/<name>/index.ts` — what a route handler may do, the `ResponseToolkit` envelope, the four things every route must declare |
+| [handlers-crud.md](./handlers-crud.md) | `src/modules/<name>/index.ts` — the canonical five-route CRUD module and its status codes |
+| [validation.md](./validation.md) | `src/modules/<name>/schema.ts` — TypeBox request/response schemas, naming, formats, what never appears in a response |
+| [services.md](./services.md) | `src/modules/<name>/service.ts` — plain-object services, transaction ownership, cache invalidation, error vocabulary |
+| [services-crud.md](./services-crud.md) | `src/modules/<name>/service.ts` — the canonical five-method CRUD service, and **where the existence/uniqueness checks live in this repo** |
 | [repositories.md](./repositories.md) | `src/libs/repositories/*.repository.ts` — factory functions, optional `tx?: DbTransaction`, the `isNull(<table>.deleted_at)` soft-delete filter, sort allow-listing |
+| [schema.md](./schema.md) | `src/libs/database/postgres/schema/` — Drizzle tables, the three-export enum pattern, relations, the `schema` object registration step, migrations |
 | [shared-code.md](./shared-code.md) | `src/libs/<bucket>/` — which bucket a thing belongs in, the alias table, barrel exports, and the no-cross-module-imports rule |
 | [di.md](./di.md) | `src/libs/plugins/core/container.ts` and `src/bootstrap.ts` — when to reach for the DI container instead of a direct import, and where registration lives |
+| [plugins.md](./plugins.md) | `src/libs/plugins/` — plugin naming, `baseApp` composition order, what a plugin may not do |
 
 ## Cross-cutting concerns
 
 | Rule | Applies to |
 | ---- | ---------- |
-| [openapi.md](./openapi.md) | Route `detail` metadata, TypeBox schemas, and `commonResponse(..., { include })` — the spec is generated from route declarations by `DocsPlugin`, never hand-written |
+| [rbac.md](./rbac.md) | Authorization — `PermissionGuard` / `RoleGuard` in `beforeHandle`, the seeded permission vocabulary, why an ungated route is open by default |
+| [routes.md](./routes.md) | Path composition, verb conventions, and the **live route map** with the guard on every route |
+| [errors-and-responses.md](./errors-and-responses.md) | The success envelope, the six error classes and their statuses, and matching `commonResponse(..., { include })` to what a route can really return |
+| [openapi.md](./openapi.md) | Route `detail` metadata, tags, `security: []` on public modules — the spec is generated from route declarations by `DocsPlugin`, never hand-written |
+| [i18n.md](./i18n.md) | `t()` from `@i18n`, the `en`/`id` catalogues, the generated key type, no hardcoded user-facing strings |
+| [mail.md](./mail.md) | Queued mail via `AuthMailService`, templates and their locale variants, `{{var}}` substitution |
+| [rate-limiting.md](./rate-limiting.md) | The global limiter inside `SecurityPlugin`, and why its numbers are hardcoded |
 | [queue.md](./queue.md) | `src/bull/` — one queue and one worker per file, the shared Redis connection, typed payloads, and re-throwing so BullMQ retries |
+| [imports-and-naming.md](./imports-and-naming.md) | Path aliases, import order, file and symbol naming |
+| [commit.md](./commit.md) | Conventional Commits, what runs before a commit, what never gets committed |
 
 ## How to use
 
@@ -41,18 +60,16 @@ These apply to **every** change, regardless of which files it touches. Read them
 - Slash commands live in [`../commands/`](../commands/): `/commit` and `/audit-flow` (the latter
   governed by [audit-findings.md](./audit-findings.md)).
 
-## Not covered by a rule yet
+## Known tensions between these rules
 
-Patterns that exist in the code but have no written rule. Worth knowing before you assume the
-codebase is silent on them:
+Recorded deliberately rather than resolved by fiat, because resolving it is a code change. Raise it
+rather than picking a side silently — [contradiction-halt.md](./contradiction-halt.md).
 
-- **Errors and responses** — `ResponseToolkit.success/created` for success, throw
-  `BadRequestError` / `UnprocessableEntityError` / `NotFoundError` / `UnauthorizedError` /
-  `ForbiddenError` / `RateLimitError` from `@errors` for failure, mapped by `ErrorHandlerPlugin`.
-  The sibling `clean-elysia-prisma` has this written up as `errors-and-responses.md`.
-- **Validation** — TypeBox schema conventions beyond what [openapi.md](./openapi.md) covers.
-- **Imports and naming** — alias order, file suffixes, symbol casing. Currently only described in
-  `CLAUDE.md`.
-- **Plugins** — naming and composition order for `src/libs/plugins/`.
-- **Commits** — the Conventional Commit workflow lives in [`../commands/commit.md`](../commands/commit.md)
-  rather than a rule file.
+- **Where CRUD checks live.** [repositories.md](./repositories.md) says the repository throws
+  `NotFoundError` for a missing row and leaves everything else to the service, but the repositories
+  also throw `UnprocessableEntityError` for uniqueness, which is a business rule. Both sibling repos
+  do it the other way round. See [services-crud.md](./services-crud.md).
+
+Resolved since this section was written: the `baseApp`-on-protected-modules question (the plugins
+inside `baseApp` now declare `{ as: "global" }`, so their hooks apply app-wide — see
+[plugins.md](./plugins.md)) and the unseeded `"role update"` permission (now `"role edit"`).

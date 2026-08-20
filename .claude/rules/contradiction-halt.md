@@ -59,15 +59,7 @@ raising it first:
   `ForgotPasswordRepository().findByToken(token)` and rejects it when the row is missing. Nothing
   checks age, so a reset link stays valid until it is used. Adding an expiry is a schema change plus
   a migration plus a check in `resetPassword`; do not "just add the check" without raising it.
-- **The `"role update"` permission does not exist in the seeded catalog.**
-  `src/modules/settings/role/index.ts:103` gates the role update route with
-  `PermissionGuard.canActivate(user, ["role update"])`, but `RBACSeeder`
-  (`src/libs/database/postgres/seed/rbac.seed.ts`) seeds `${group} ${permission}` over the groups
-  `user`/`role`/`permission` and the actions `list`/`create`/`detail`/`edit`/`delete` — so the
-  catalog contains `"role edit"`, never `"role update"`. Every other route in `settings/` uses the
-  `edit` spelling. Since `PermissionGuard` short-circuits to `true` for the `superuser` role, the
-  route works for a superuser and is unreachable for anyone else. Renaming touches either the route
-  or the seeder plus any already-seeded database, so it is a decision, not a typo fix.
+
 - **The `.agents/skills/` bundle is a generation behind its sibling repositories.**
   `.claude/skills` is a symlink to `.agents/skills`. Treat the bundle as vendored: do not edit it as
   part of unrelated work, and flag rather than "modernise" it.
