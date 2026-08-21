@@ -33,15 +33,15 @@ In the route's `beforeHandle`, never inside the handler body:
 ```ts
 .get(
 	"",
-	async ({ query }) => { /* ... */ },
+	async ({ query, request }) => { /* ... */ },
 	{
 		beforeHandle: ({ user }) => {
 			PermissionGuard.canActivate(user, ["role list"]);
 		},
-		query: DatatableQueryParams,
+		query: RoleQuerySchema,
 		detail: { summary: "List all roles", description: "... Requires 'role list' permission." },
 		response: commonPaginatedResponse(RoleListSchema, {
-			include: [200, 400, 401, 403, 500],
+			include: [200, 400, 401, 403, 422, 500],
 		}),
 	},
 )

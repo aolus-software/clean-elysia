@@ -101,20 +101,44 @@ parent.
 
 ## Token tables need expiry and single-use
 
-A token table carries at minimum `token`, `user_id`, and `expired_at`, and the consuming service must
-compare `expired_at` against now. Both `email_verifications` and `password_reset_tokens` do this —
-the latter since 2026-08-20, when the column and the check in `AuthService.resetPassword` were added.
+A token table carries `token`, `user_id`, `expired_at`, and `used_at`, with a **unique** index on
+`token` and a composite index on `(user_id, used_at)`. The consuming service compares `expired_at`
+against now **and** rejects a row whose `used_at` is not null. Both `email_verifications` and
+`password_reset_tokens` do all of this.
+
+```ts
+token: varchar({ length: 255 }).notNull(),
+expired_at: timestamp().notNull(),
+used_at: timestamp(),
+// ...
+(table) => [
+	uniqueIndex("<name>_token_unique").on(table.token),
+	index("<name>_user_id_used_at_index").on(table.user_id, table.used_at),
+],
+```
+
+**Single use is a stamp, not a delete.** `AuthService.verifyEmail` and `AuthService.resetPassword`
+both `update ... set used_at = now()` on every unused row for that user, inside the same transaction
+as the write they authorise. Deleting the row instead also enforces single use, but it loses the
+audit trail and a failed delete leaves a spent token live. Because the row survives consumption, the
+`used_at` check in the service is the *only* thing enforcing single use — a spent row still matches
+the token lookup, so omitting the check re-opens the token permanently.
+
+Both flows deliberately spend **all** the user's outstanding tokens, not just the one presented: a
+password that has just changed must invalidate the other links that could change it again. Note that
+issuance (`AuthMailService`) does *not* revoke prior tokens in this repo, so several can be live at
+once until one is used — the sibling `clean-elysia-prisma` revokes on issue instead. Either is
+defensible; know which one you are reading.
 
 **Set the expiry by calling a lifetime function, never by reading a constant.** The helpers in
-`src/libs/default/token-lifetime.ts` are functions —
-`verificationTokenLifetime()`, `resetPasswordLifetime()` — because they used to be module-scope
-constants, which froze the expiry at "process start + 1 hour" and made every token minted after the
-first hour of uptime already expired on arrival. A `Date` computed at module scope is almost always
-that bug.
+`src/libs/default/token-lifetime.ts` are functions — `verificationTokenLifetime()`,
+`resetPasswordLifetime()` — for a reason. As module-scope constants they evaluate once at import,
+freezing the expiry at "process start + 1 hour", so every token minted after the first hour of uptime
+arrives already expired and verification silently stops working on a long-lived process. A `Date`
+computed at module scope is almost always that bug.
 
-Still open for new tables: prefer a unique index on `token` and a `used_at` column. Deleting the row
-after consumption (the current approach in both tables) works but loses the audit trail, and a failed
-delete leaves the token live.
+A new token table gets the same four columns and both indexes from the start — the two existing
+tables are the template.
 
 ## Relations
 
@@ -179,4 +203,5 @@ make fresh           # db-drop + db-push + db-seed — DESTRUCTIVE
 - Don't add a table without registering it in the `schema` object.
 - Don't add an enum value in one of the three exports and not the others.
 - Don't create a soft-deletable table without `deleted_at`, or a non-soft-deletable one with it.
-- Don't add a token table without an expiry column.
+- Don't add a token table without `expired_at`, `used_at`, and a unique index on `token`.
+- Don't enforce single use by deleting the row, and don't read a token without checking `used_at`.

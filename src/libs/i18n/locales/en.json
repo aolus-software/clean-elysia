@@ -16,6 +16,9 @@
 	"errors.parseFailed": "Invalid request format",
 	"errors.parseBody": "Failed to parse request body",
 
+	"datatable.sortNotAllowed": "Cannot sort by {{field}}. Allowed: {{allowed}}",
+	"datatable.filterNotAllowed": "Cannot filter by {{field}}. Allowed: {{allowed}}",
+
 	"validation.failed": "Request validation failed",
 	"validation.invalid": "Invalid request data",
 	"validation.required": "This field is required",
@@ -53,6 +56,22 @@
 
 	"profile.retrieved": "Profile retrieved successfully",
 	"profile.updated": "Profile updated successfully",
+
+	"role.notFound": "Role not found",
+	"role.nameExists": "Role name already exists",
+	"role.nameExistsFor": "The role name for {{name}} already exists",
+
+	"permission.notFound": "Permission not found",
+	"permission.nameExists": "Permission name already exists",
+	"permission.someExists": "Some permission already exists",
+	"permission.someExistsList": "Some permission is already exist {{names}}",
+
+	"user.notFound": "User not found",
+	"user.emailExists": "Email already exists",
+	"user.createFailed": "Failed to create user",
+	"user.createFailedDetail": "User creation failed",
+	"user.createRetrieveFailed": "Failed to retrieve created user",
+	"user.retrieveFailedDetail": "User retrieval failed",
 
 	"mail.subject.verification": "Email verification",
 	"mail.subject.resetPassword": "Reset Password"

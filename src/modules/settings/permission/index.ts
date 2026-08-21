@@ -1,6 +1,5 @@
 import { PermissionGuard } from "@guards";
 import { AuthPlugin } from "@plugins";
-import { DatatableQueryParams } from "@types";
 import {
 	commonPaginatedResponse,
 	commonResponse,
@@ -12,6 +11,7 @@ import Elysia, { t } from "elysia";
 import {
 	PermissionCreateSchema,
 	PermissionListSchema,
+	PermissionQuerySchema,
 	PermissionUpdateSchema,
 } from "./schema";
 import { PermissionService } from "./service";
@@ -26,8 +26,8 @@ export const PermissionModule = new Elysia({
 	.use(AuthPlugin)
 	.get(
 		"",
-		async ({ query }) => {
-			const queryParam = DatatableToolkit.parseFilter(query);
+		async ({ query, request }) => {
+			const queryParam = DatatableToolkit.parseFilter(query, request.url);
 			const result = await PermissionService.findAll(queryParam);
 
 			return ResponseToolkit.success(
@@ -40,14 +40,18 @@ export const PermissionModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["permission list"]);
 			},
-			query: DatatableQueryParams,
+			query: PermissionQuerySchema,
 			detail: {
 				summary: "List all permissions",
 				description:
-					"Retrieve a paginated list of permissions with optional filtering. Requires 'permission list' permission.",
+					"Retrieve a paginated list of permissions. Requires 'permission list' " +
+					"permission. `search` matches the permission name and group. Sortable " +
+					"and filterable fields are listed on the individual query parameters; " +
+					"an unsupported `sort` is rejected with 422 and an unsupported " +
+					"`filter[<key>]` with 400.",
 			},
 			response: commonPaginatedResponse(PermissionListSchema, {
-				include: [200, 400, 401, 403, 500],
+				include: [200, 400, 401, 403, 422, 500],
 			}),
 		},
 	)

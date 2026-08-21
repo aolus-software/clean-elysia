@@ -51,6 +51,10 @@ Until that is settled deliberately:
 - **Follow the module you are editing.** Do not half-migrate one module to the other pattern.
 - **Never split a check across both layers.** Two existence checks for one operation means two
   queries and two places to forget one.
+- **The repository's throw messages are catalog keys.** Because the throw lives there, so does the
+  user-facing string: `t("role.notFound")`, not `"Role not found"`. See
+  [repositories.md](./repositories.md) and rule 6 of [i18n.md](./i18n.md). If the checks ever move
+  up into the services, the `t()` calls move with them.
 - For a genuinely new module, prefer the sibling pattern — checks in the service — and say so in the
   PR, because it is the direction the rest of the workspace leans. Raise it rather than quietly
   diverging; that is [contradiction-halt.md](./contradiction-halt.md).
@@ -68,7 +72,7 @@ findAll: async (
 },
 ```
 
-The handler has already run `DatatableToolkit.parseFilter(query)`, so the service receives a parsed
+The handler has already run `DatatableToolkit.parseFilter(query, request.url)`, so the service receives a parsed
 `DatatableType` — do not re-parse it.
 
 ## findOne

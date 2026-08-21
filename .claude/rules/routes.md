@@ -87,11 +87,11 @@ change — that is [documentation.md](./documentation.md).
 
 ## Known gaps in the current map
 
-- **Resolved 2026-08-20:** `PATCH /settings/roles/:id` used to require `"role update"`, which
-  `rbac.seed.ts` never produces — so only a `superuser` (who bypasses the guard) could update a role
-  and an `admin` holding all 15 seeded permissions got a 403. It now reads `"role edit"`, matching
-  every sibling route and the seed. Kept here as the worked example of why guard strings are checked
-  against the seed: it failed *closed*, so nothing broke loudly and it survived for a long time.
+- **Guard strings are checked against the seed, always.** The update action is `"role edit"`, not
+  `"role update"` — `rbac.seed.ts` never produces the latter. Naming a permission the seed does not
+  produce fails **closed**: only a `superuser` (who bypasses the guard) can reach the route, and an
+  `admin` holding all 15 seeded permissions gets a 403. Nothing breaks loudly, which is exactly why
+  this class of mistake survives. Grep the seed before writing a guard string.
 - The three `user create`-gated sub-resource routes on `/settings/users/:id` (`send-verification-email`,
   `send-reset-password-email`) reuse the create permission because no `user resend` permission is
   seeded. That is deliberate; do not add a permission for it without extending the seed.

@@ -1,15 +1,58 @@
 import { db, DbTransaction, rolePermissions, roles } from "@database";
 import { defaultSort } from "@default";
 import { UnprocessableEntityError } from "@errors";
+import { t } from "@i18n";
 import {
 	DatatableType,
+	FilterField,
+	filterFieldNames,
 	PaginationResponse,
 	RoleList,
 	SortDirection,
 } from "@types";
 import { DatatableToolkit } from "@utils";
-import { and, asc, desc, eq, ilike, ne, not, or, SQL } from "drizzle-orm";
+import {
+	and,
+	asc,
+	desc,
+	eq,
+	gte,
+	ilike,
+	lte,
+	ne,
+	not,
+	or,
+	SQL,
+} from "drizzle-orm";
 import { NotFoundError } from "elysia";
+
+/* Keys are the API-facing sort names (camelCase, aligned with the shared
+   defaultSort constant); values are the snake_case Drizzle columns they map
+   onto. */
+const roleOrderableColumns = {
+	id: roles.id,
+	name: roles.name,
+	createdAt: roles.created_at,
+	updatedAt: roles.updated_at,
+};
+
+/* The ?sort= and filter[...] values this repository accepts. Exported so the
+   module can document them in OpenAPI from one source of truth rather than
+   restating the list. An unrecognised value is rejected, not ignored. */
+export const roleSortableFields = Object.keys(roleOrderableColumns);
+export const roleFilterableFields: FilterField[] = [
+	"name",
+	{ field: "createdAt", kind: "date" },
+	{ field: "updatedAt", kind: "date" },
+];
+
+/* Example value per non-enum filter key, rendered as the concrete sample in
+   /docs. */
+export const roleFilterExample: Record<string, string> = {
+	name: "admin",
+	createdAt: "2024-01-01,2024-12-31",
+	updatedAt: "2024-01-01,2024-12-31",
+};
 
 export const RoleRepository = () => {
 	const dbInstance = db;
@@ -35,33 +78,56 @@ export const RoleRepository = () => {
 				queryParam.filter || null;
 			const offset = (page - 1) * limit;
 
+			DatatableToolkit.assertFilterKeys(
+				filter,
+				filterFieldNames(roleFilterableFields),
+			);
+			DatatableToolkit.assertFilterEnums(filter, roleFilterableFields);
+
 			let whereCondition: SQL | undefined;
 			if (search) {
 				whereCondition = or(ilike(roles.name, `%${search}%`));
 			}
 
-			let filteredCondition: SQL | undefined = undefined;
+			/* Every matching filter is ANDed together. Assigning to a single
+			   accumulator here instead would let the last matching block overwrite
+			   the earlier ones, silently dropping every filter but one. */
+			const filterClauses: (SQL | undefined)[] = [];
 			if (filter) {
 				if (filter.name) {
-					filteredCondition = and(
-						whereCondition,
-						ilike(roles.name, `%${filter.name.toString()}%`),
+					filterClauses.push(ilike(roles.name, `%${filter.name.toString()}%`));
+				}
+
+				if (filter.createdAt) {
+					const { from, to } = DatatableToolkit.filterDateRange(
+						filter.createdAt,
+						"createdAt",
+					);
+					filterClauses.push(
+						gte(roles.created_at, from),
+						lte(roles.created_at, to),
+					);
+				}
+
+				if (filter.updatedAt) {
+					const { from, to } = DatatableToolkit.filterDateRange(
+						filter.updatedAt,
+						"updatedAt",
+					);
+					filterClauses.push(
+						gte(roles.updated_at, from),
+						lte(roles.updated_at, to),
 					);
 				}
 			}
 
 			const finalWhereCondition: SQL | undefined = and(
 				whereCondition,
-				filteredCondition,
+				...filterClauses,
 			);
 
 			const orderColumn = DatatableToolkit.parseSort(
-				{
-					id: roles.id,
-					name: roles.name,
-					createdAt: roles.created_at,
-					updatedAt: roles.updated_at,
-				},
+				roleOrderableColumns,
 				orderBy,
 			);
 
@@ -105,10 +171,10 @@ export const RoleRepository = () => {
 			});
 
 			if (isNameExists) {
-				throw new UnprocessableEntityError("Role name already exists", [
+				throw new UnprocessableEntityError(t("role.nameExists"), [
 					{
 						field: "name",
-						message: `The role name for ${data.name} already exists`,
+						message: t("role.nameExistsFor", { name: data.name }),
 					},
 				]);
 			}
@@ -159,7 +225,7 @@ export const RoleRepository = () => {
 			});
 
 			if (!role) {
-				throw new NotFoundError("Role not found");
+				throw new NotFoundError(t("role.notFound"));
 			}
 
 			const allPermissions = await database.query.permissions.findMany({
@@ -220,7 +286,7 @@ export const RoleRepository = () => {
 			});
 
 			if (!role) {
-				throw new NotFoundError("Role not found");
+				throw new NotFoundError(t("role.notFound"));
 			}
 
 			const isNameExists = await database.query.roles.findFirst({
@@ -228,10 +294,10 @@ export const RoleRepository = () => {
 			});
 
 			if (isNameExists) {
-				throw new UnprocessableEntityError("Role name already exists", [
+				throw new UnprocessableEntityError(t("role.nameExists"), [
 					{
 						field: "name",
-						message: `The role name for ${data.name} already exists`,
+						message: t("role.nameExistsFor", { name: data.name }),
 					},
 				]);
 			}
@@ -267,7 +333,7 @@ export const RoleRepository = () => {
 			});
 
 			if (!role) {
-				throw new NotFoundError("Role not found");
+				throw new NotFoundError(t("role.notFound"));
 			}
 
 			await database

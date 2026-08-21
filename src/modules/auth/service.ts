@@ -1,11 +1,11 @@
-import { db, emailVerifications, users } from "@database";
+import { db, emailVerifications, passwordResetTokens, users } from "@database";
 import { BadRequestError } from "@errors";
 import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { ForgotPasswordRepository, UserRepository } from "@repositories";
 import { UserInformation } from "@types";
 import { Hash, log } from "@utils";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 export const AuthService = {
 	singIn: async (email: string, password: string): Promise<UserInformation> => {
@@ -119,7 +119,7 @@ export const AuthService = {
 					.where(eq(emailVerifications.token, token))
 			)[0] ?? null;
 
-		if (!record || record.expired_at < new Date()) {
+		if (!record || record.expired_at < new Date() || record.used_at !== null) {
 			throw new BadRequestError(t("auth.validationError"), [
 				{
 					field: "token",
@@ -134,9 +134,18 @@ export const AuthService = {
 				.set({ email_verified_at: new Date() })
 				.where(eq(users.id, record.user_id));
 
+			// Stamp rather than delete, so consumption is auditable. Every
+			// outstanding token for this user is spent, matching the previous
+			// delete-all-for-user behaviour.
 			await trx
-				.delete(emailVerifications)
-				.where(eq(emailVerifications.user_id, record.user_id));
+				.update(emailVerifications)
+				.set({ used_at: new Date() })
+				.where(
+					and(
+						eq(emailVerifications.user_id, record.user_id),
+						isNull(emailVerifications.used_at),
+					),
+				);
 		});
 
 		log.info({ userId: record.user_id }, "Email verified successfully");
@@ -158,7 +167,11 @@ export const AuthService = {
 	resetPassword: async (token: string, password: string): Promise<void> => {
 		const passwordReset = await ForgotPasswordRepository().findByToken(token);
 
-		if (!passwordReset || passwordReset.expired_at < new Date()) {
+		if (
+			!passwordReset ||
+			passwordReset.expired_at < new Date() ||
+			passwordReset.used_at !== null
+		) {
 			throw new BadRequestError(t("auth.validationError"), [
 				{
 					field: "token",
@@ -175,9 +188,19 @@ export const AuthService = {
 				.set({ password: hashedPassword })
 				.where(eq(users.id, passwordReset.user_id));
 
+			// Stamp rather than delete, so consumption is auditable. Every
+			// outstanding reset token for this user is spent — a password that has
+			// just changed must invalidate the other links that could change it
+			// again.
 			await trx
-				.delete(ForgotPasswordRepository().getTable())
-				.where(eq(ForgotPasswordRepository().getTable().id, passwordReset.id));
+				.update(passwordResetTokens)
+				.set({ used_at: new Date() })
+				.where(
+					and(
+						eq(passwordResetTokens.user_id, passwordReset.user_id),
+						isNull(passwordResetTokens.used_at),
+					),
+				);
 		});
 
 		log.info({ userId: passwordReset.user_id }, "Password reset successfully");

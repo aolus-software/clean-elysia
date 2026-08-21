@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+	index,
+	pgTable,
+	timestamp,
+	uniqueIndex,
+	uuid,
+	varchar,
+} from "drizzle-orm/pg-core";
 
 import { users } from "./user";
 
@@ -12,12 +19,22 @@ export const passwordResetTokens = pgTable(
 			.references(() => users.id),
 		token: varchar({ length: 255 }).notNull(),
 		expired_at: timestamp().notNull(),
+		// Stamped when the token is consumed. Single use is enforced by this
+		// column, not by deleting the row, so consumption stays auditable and a
+		// failed write cannot leave a spent token live.
+		used_at: timestamp(),
 		created_at: timestamp().defaultNow(),
 		updated_at: timestamp()
 			.defaultNow()
 			.$onUpdate(() => new Date()),
 	},
-	(table) => [index("password_reset_token_token_index").on(table.token)],
+	(table) => [
+		uniqueIndex("password_reset_token_token_unique").on(table.token),
+		index("password_reset_token_user_id_used_at_index").on(
+			table.user_id,
+			table.used_at,
+		),
+	],
 );
 
 export const passwordResetTokenRelations = relations(

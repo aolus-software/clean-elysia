@@ -1,3 +1,9 @@
+import {
+	permissionFilterableFields,
+	permissionFilterExample,
+	permissionSortableFields,
+} from "@repositories";
+import { datatableQueryParams } from "@types";
 import { t } from "elysia";
 
 export const PermissionCreateSchema = t.Object({
@@ -42,4 +48,15 @@ export const PermissionListSchema = t.Object({
 	group: t.String({ description: "Permission group", examples: ["user"] }),
 	created_at: t.Date({ description: "Creation date" }),
 	updated_at: t.Date({ description: "Last update date" }),
+});
+
+// === QUERY ===
+
+/* Documented against the repository's own allow-lists, so /docs shows exactly
+   the sort values and filter keys PermissionRepository().findAll validates
+   against. */
+export const PermissionQuerySchema = datatableQueryParams({
+	sortFields: permissionSortableFields,
+	filterFields: permissionFilterableFields,
+	filterExample: permissionFilterExample,
 });

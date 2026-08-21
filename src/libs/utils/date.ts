@@ -42,8 +42,25 @@ export class DateToolkit {
 			.startOf("day");
 	}
 
+	/**
+	 * Parses a date string in the **configured** timezone, not the host's.
+	 *
+	 * `dayjs(str)` interprets a string with no offset using the machine's local
+	 * timezone; `.tz(...)` afterwards only re-presents that same instant, it does
+	 * not reinterpret it. So on a host at UTC+7 with `APP_TIMEZONE=UTC`,
+	 * `dayjs("2024-03-05").tz("UTC")` lands on 2024-03-04T17:00Z — the wrong
+	 * calendar day. A date filter built on that is off by one.
+	 *
+	 * A string carrying its own offset (`Z` or `±HH:MM`) is an absolute instant
+	 * and is honoured as written, then presented in the configured timezone.
+	 * Anything else is read as wall-clock time in the configured timezone.
+	 */
 	static parse(dateString: string): dayjs.Dayjs {
-		return dayjs(dateString).tz(DateToolkit._configuredTimezone);
+		const hasExplicitOffset = /(?:Z|[+-]\d{2}:?\d{2})$/.test(dateString.trim());
+
+		return hasExplicitOffset
+			? dayjs(dateString).tz(DateToolkit._configuredTimezone)
+			: dayjs.tz(dateString, DateToolkit._configuredTimezone);
 	}
 
 	static format(date: dayjs.Dayjs, formatString: string): string {

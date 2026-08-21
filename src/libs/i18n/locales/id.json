@@ -16,6 +16,9 @@
 	"errors.parseFailed": "Format permintaan tidak valid",
 	"errors.parseBody": "Gagal mem-parsing isi permintaan",
 
+	"datatable.sortNotAllowed": "Tidak dapat mengurutkan berdasarkan {{field}}. Yang diizinkan: {{allowed}}",
+	"datatable.filterNotAllowed": "Tidak dapat memfilter berdasarkan {{field}}. Yang diizinkan: {{allowed}}",
+
 	"validation.failed": "Validasi permintaan gagal",
 	"validation.invalid": "Data permintaan tidak valid",
 	"validation.required": "Kolom ini wajib diisi",
@@ -53,6 +56,22 @@
 
 	"profile.retrieved": "Profil berhasil diambil",
 	"profile.updated": "Profil berhasil diperbarui",
+
+	"role.notFound": "Peran tidak ditemukan",
+	"role.nameExists": "Nama peran sudah ada",
+	"role.nameExistsFor": "Nama peran {{name}} sudah ada",
+
+	"permission.notFound": "Hak akses tidak ditemukan",
+	"permission.nameExists": "Nama hak akses sudah ada",
+	"permission.someExists": "Sebagian hak akses sudah ada",
+	"permission.someExistsList": "Sebagian hak akses sudah ada {{names}}",
+
+	"user.notFound": "Pengguna tidak ditemukan",
+	"user.emailExists": "Email sudah digunakan",
+	"user.createFailed": "Gagal membuat pengguna",
+	"user.createFailedDetail": "Pembuatan pengguna gagal",
+	"user.createRetrieveFailed": "Gagal mengambil data pengguna yang baru dibuat",
+	"user.retrieveFailedDetail": "Pengambilan data pengguna gagal",
 
 	"mail.subject.verification": "Verifikasi Email",
 	"mail.subject.resetPassword": "Reset Kata Sandi"

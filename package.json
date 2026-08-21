@@ -71,17 +71,10 @@
 		"eslint-plugin-simple-import-sort": "^13.0.0",
 		"globals": "^17.6.0",
 		"husky": "^9.1.7",
-		"lint-staged": "^17.0.4",
 		"tsx": "^4.21.0",
 		"typescript-eslint": "^8.59.3"
 	},
 	"peerDependencies": {
 		"typescript": "^6.0.3"
-	},
-	"lint-staged": {
-		"*.ts": [
-			"bun run lint:fix",
-			"bun run format"
-		]
 	}
 }

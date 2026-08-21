@@ -49,7 +49,7 @@ In scope — anything that ships in this repository:
   any route whose `beforeHandle` gating can be bypassed,
 - soft delete: reads that forget `isNull(<table>.deleted_at)` and let deleted rows be read back
   (`.claude/rules/repositories.md`),
-- secret handling: bcrypt password hashing (`Hash` in `@utils`), `APP_KEY`, `APP_JWT_SECRET`, the
+- secret handling: bcrypt password hashing (`Hash` in `@utils`), `APP_KEY`, `JWT_SECRET`, the
   crypto-js `Encrypt`/`Decrypt` helpers, and anything leaking secrets into logs, responses, or
   OpenAPI examples,
 - `SecurityPlugin` (`src/libs/plugins/security.plugin.ts`): the CORS config, the Helmet CSP, and the
@@ -67,7 +67,7 @@ Out of scope:
 
 - vulnerabilities in a project _built_ from this template that come from that project's own code,
 - anything requiring a misconfiguration the docs tell you not to ship — for example leaving
-  `ALLOWED_HOST=*`, keeping the example `APP_KEY` / `APP_JWT_SECRET`, or running with
+  `ALLOWED_HOST=*`, keeping the example `APP_KEY` / `JWT_SECRET`, or running with
   `NODE_ENV=development` in production,
 - missing hardening that is documented as the deployer's responsibility (TLS termination, database
   and Redis network access, secret storage, ClickHouse exposure),
@@ -77,9 +77,11 @@ Out of scope:
 
 These are documented rather than treated as vulnerabilities. Review them before deploying:
 
-- `.env` holds every secret and is never committed. Rotate `APP_KEY` and `APP_JWT_SECRET` away from
-  the `.env.example` placeholders (`your-app-key`, `your-jwt-secret`) before going live — envalid
-  supplies defaults for them, so the app will start happily with insecure values.
+- `.env` holds every secret and is never committed. **`JWT_SECRET` is the only one with no envalid
+  default** — the process refuses to boot without it, which is deliberate: it is what signs and
+  verifies every token. Rotate `APP_KEY` away from its `.env.example` placeholder (`your-app-key`)
+  too; envalid _does_ supply a default for that one, so the app starts happily with an insecure
+  value. (`APP_JWT_SECRET` was removed on 2026-08-21 — it never signed anything.)
 - `ALLOWED_HOST` feeds `CORSConfig.origin`. Set it to your real front-end origins as a
   comma-separated list; an unset or `*` value means every origin. `credentials` is `false` in
   `src/libs/config/cors.config.ts` — if you turn it on, a wildcard origin becomes unsafe.

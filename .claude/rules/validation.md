@@ -77,6 +77,41 @@ Note: `src/modules/settings/user/schema.ts` defines `UserStatusSchema = t.Enum(U
 then double-wraps it as `t.Enum(UserStatusSchema)` in most fields. Line 56 has the correct form,
 `t.Enum(UserStatus)`. Write the direct form in new code.
 
+## List query schemas come from `datatableQueryParams`
+
+A list route's `query` schema is built once per module in that module's `schema.ts`, from the shared
+builder in `@types`, passing the repository's **exported** allow-lists:
+
+```ts
+import { roleFilterableFields, roleSortableFields } from "@repositories";
+import { datatableQueryParams } from "@types";
+
+export const RoleQuerySchema = datatableQueryParams({
+	sortFields: roleSortableFields,
+	filterFields: roleFilterableFields,
+});
+```
+
+What that buys, and why the exports rather than a restated list:
+
+- `sort` becomes a **closed union of the allowed values**, so `/docs` renders a dropdown carrying
+  `defaultSort` as its default, and an unrecognised value is a 422 from validation.
+- The `filter` object gets **one typed property per allowed key** — an enum key renders as a
+  dropdown of its values, every other key shows the sample from `<entity>FilterExample`. This is
+  what replaces the single opaque description blob.
+- **That filter object is documentation, not validation.** Elysia strips `filter[<key>]` query
+  parameters before the schema runs, so nothing there ever receives a value; the repository enforces
+  both the key set and the enum ranges, and returns **400**. See
+  [repositories.md](./repositories.md).
+- Nothing can drift. The documented list and the enforced list are the same array.
+
+Passing a hand-written array here, or reaching for the bare `DatatableQueryParams` export, defeats
+all three. `DatatableQueryParams` exists only for a list route with no entity-specific allow-list to
+advertise, and there are none in this repo.
+
+`sortDirection`, `page`, and `perPage` are already described and defaulted by the builder — do not
+redeclare them per module.
+
 ## Response schemas
 
 - Wrap the data schema in the envelope with `commonResponse(<DataSchema>, { include: [...] })`, or

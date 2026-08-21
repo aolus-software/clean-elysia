@@ -158,29 +158,54 @@ const EmailSchema = t.String({
 - **Validation**: Valid UUID v4 format
 - **Example**: "550e8400-e29b-41d4-a716-446655440000"
 
-#### Pagination
+#### Datatable query parameters
 
-```json
-{
-	"page": 1,
-	"limit": 10
-}
+Every list endpoint takes the same five parameters, as a query string — not a JSON body:
+
+```http
+GET /settings/users?page=1&perPage=10&search=admin&sort=createdAt&sortDirection=desc&filter[status]=active
 ```
 
-- **page**: Positive integer (default: 1)
-- **limit**: 1-100 (default: 10)
+- **page**: positive integer (default: 1)
+- **perPage**: positive integer (default: 10)
+- **search**: free text, matched case-insensitively against that resource's searchable columns
+- **sort**: one of the fields the endpoint allows (default: `createdAt`). The allowed set is
+  per-resource and is rendered as a dropdown in `/docs`; an unrecognised value returns **422**
+- **sortDirection**: `asc` | `desc` (default: `desc`); anything else returns **422**
+- **filter[&lt;key&gt;]**: repeatable, one query parameter per filter. The allowed keys are
+  per-resource and are named in the `filter` parameter's description in `/docs`; an unrecognised key
+  returns **400**
 
-#### Sorting
+The allowed sort fields and filter keys per resource:
 
-```json
-{
-	"sortBy": "createdAt",
-	"sortOrder": "desc"
-}
-```
+| Resource                | `sort`                                                    | `filter[...]`                                                         |
+| ----------------------- | --------------------------------------------------------- | --------------------------------------------------------------------- |
+| `/settings/roles`       | `id`, `name`, `createdAt`, `updatedAt`                    | `name`, `createdAt`, `updatedAt`                                      |
+| `/settings/permissions` | `id`, `name`, `group`, `createdAt`, `updatedAt`           | `name`, `group`, `createdAt`, `updatedAt`                             |
+| `/settings/users`       | `id`, `name`, `email`, `status`, `createdAt`, `updatedAt` | `status` (enum), `name`, `email`, `role_id`, `createdAt`, `updatedAt` |
 
-- **sortBy**: Field name (optional)
-- **sortOrder**: "asc" or "desc" (default: "asc")
+A comma means different things per key, and `/docs` says which on each one:
+
+| Key kind                        | Comma means               | Example                                   |
+| ------------------------------- | ------------------------- | ----------------------------------------- |
+| enum (`status`)                 | any of these values       | `filter[status]=active,suspended`         |
+| id (`role_id`)                  | any of these ids          | `filter[role_id]=uuid-a,uuid-b`           |
+| date (`createdAt`, `updatedAt`) | the two ends of a range   | `filter[createdAt]=2024-01-01,2024-12-31` |
+| plain text (`name`, `email`)    | nothing — a literal comma | `filter[name]=jane`                       |
+
+`filter[status]` accepts only `active`, `inactive`, `suspended`, `blocked`; anything else is a **400**
+naming the allowed values, and `/docs` renders it as a dropdown.
+
+A date key given a **single** date matches that whole day in `APP_TIMEZONE` —
+`filter[createdAt]=2024-03-05` covers `00:00:00.000` to `23:59:59.999` on the 5th. An unparseable
+date, a reversed range, or more than two parts is a **400**.
+
+Multiple filters are **ANDed** together: `filter[status]=active&filter[name]=jane` returns active
+users named jane.
+
+These are not restated by hand anywhere in the code — each module documents them from the
+allow-lists its repository exports, so this table is the only place they are transcribed. If it
+disagrees with `/docs`, `/docs` is right.
 
 ---
 
@@ -370,17 +395,23 @@ Each field has specific validation rules documented in the schema:
 
 **Pagination:**
 
-- `page`: Positive integer (default: 1)
-- `limit`: 1-100 (default: 10)
+- `page`: positive integer (default: 1)
+- `perPage`: positive integer (default: 10)
 
 **Sorting:**
 
-- `sortBy`: Field name (optional)
-- `sortOrder`: "asc" | "desc" (default: "asc")
+- `sort`: one of the resource's allowed fields (default: `createdAt`); otherwise 422
+- `sortDirection`: `asc` | `desc` (default: `desc`); otherwise 422
 
 **Search:**
 
-- `q` or `search`: Min 1 char when provided
+- `search`: free text; matched against the resource's searchable columns
+
+**Filtering:**
+
+- `filter[<key>]`: one query parameter per filter, using a key the resource allows; otherwise 400
+
+See "Datatable query parameters" above for the per-resource allow-lists.
 
 ---
 

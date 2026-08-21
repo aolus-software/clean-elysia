@@ -1,6 +1,5 @@
 import { PermissionGuard } from "@guards";
 import { AuthPlugin } from "@plugins";
-import { DatatableQueryParams } from "@types";
 import {
 	commonPaginatedResponse,
 	commonResponse,
@@ -9,7 +8,12 @@ import {
 } from "@utils";
 import Elysia, { t } from "elysia";
 
-import { CreateRoleSchema, RoleListSchema, UpdateRoleSchema } from "./schema";
+import {
+	CreateRoleSchema,
+	RoleListSchema,
+	RoleQuerySchema,
+	UpdateRoleSchema,
+} from "./schema";
 import { RoleService } from "./service";
 
 export const RoleModule = new Elysia({
@@ -22,8 +26,8 @@ export const RoleModule = new Elysia({
 	.use(AuthPlugin)
 	.get(
 		"",
-		async ({ query }) => {
-			const queryParam = DatatableToolkit.parseFilter(query);
+		async ({ query, request }) => {
+			const queryParam = DatatableToolkit.parseFilter(query, request.url);
 			const result = await RoleService.findAll(queryParam);
 
 			return ResponseToolkit.success(
@@ -36,14 +40,17 @@ export const RoleModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["role list"]);
 			},
-			query: DatatableQueryParams,
+			query: RoleQuerySchema,
 			detail: {
 				summary: "List all roles",
 				description:
-					"Retrieve a list of all roles. Requires 'role list' permission.",
+					"Retrieve a paginated list of roles. Requires 'role list' permission. " +
+					"`search` matches the role name. Sortable and filterable fields are " +
+					"listed on the individual query parameters; an unsupported `sort` is " +
+					"rejected with 422 and an unsupported `filter[<key>]` with 400.",
 			},
 			response: commonPaginatedResponse(RoleListSchema, {
-				include: [200, 400, 401, 403, 500],
+				include: [200, 400, 401, 403, 422, 500],
 			}),
 		},
 	)

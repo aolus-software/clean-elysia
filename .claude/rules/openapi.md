@@ -2,7 +2,7 @@
 
 The API spec is generated from Elysia route metadata at runtime by `DocsPlugin` (`src/libs/plugins/docs.plugin.ts`, powered by `@elysiajs/openapi` with the Scalar provider). It's served at `/docs` and `/docs/openapi.json`, gated on a single flag: `enabled: AppConfig.ENABLE_API_DOCS`, from the `ENABLE_API_DOCS` environment variable.
 
-That flag **defaults to `false`**, so an environment that never sets it cannot expose the schema, and it is deliberately **independent of `NODE_ENV`** — docs can be turned on for a staging box without pretending it is a development environment, and cannot be published by accident just by shipping with `NODE_ENV=staging`. It replaced an `APP_ENV !== "production"` check, which published the schema on every non-production deployment. Don't reintroduce an environment check alongside it; the flag is the whole switch.
+That flag **defaults to `false`**, so an environment that never sets it cannot expose the schema, and it is deliberately **independent of `NODE_ENV`** — docs can be turned on for a staging box without pretending it is a development environment, and cannot be published by accident just by shipping with `NODE_ENV=staging`. An `APP_ENV !== "production"` check would publish the schema on every non-production deployment; don't reintroduce one alongside the flag. The flag is the whole switch.
 
 You don't write OpenAPI YAML by hand. Every documentation field comes from how routes are declared.
 
@@ -42,18 +42,18 @@ Example (from `settings/user/index.ts`):
 ```ts
 .get(
   "",
-  async ({ query }) => { /* ... */ },
+  async ({ query, request }) => { /* ... */ },
   {
     beforeHandle: ({ user }) => {
       PermissionGuard.canActivate(user, ["user list"]);
     },
-    query: DatatableQueryParams,
+    query: UserQuerySchema,
     detail: {
       summary: "List all users",
       description: "Retrieve a list of all users. Requires 'user list' permission.",
     },
     response: commonPaginatedResponse(UserListSchema, {
-      include: [200, 400, 401, 403, 500],
+      include: [200, 400, 401, 403, 422, 500],
     }),
   },
 )

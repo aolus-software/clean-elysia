@@ -1,5 +1,11 @@
 import { UserStatus } from "@database";
 import { StrongPassword } from "@default";
+import {
+	userFilterableFields,
+	userFilterExample,
+	userSortableFields,
+} from "@repositories";
+import { datatableQueryParams } from "@types";
 import { t } from "elysia";
 
 export const UserStatusSchema = t.Enum(UserStatus);
@@ -92,4 +98,14 @@ export const UserResetPasswordSchema = t.Object({
 			"New strong password with uppercase, lowercase, number, and special character",
 		examples: ["NewSecure123!"],
 	}),
+});
+
+// === QUERY ===
+
+/* Documented against the repository's own allow-lists, so /docs shows exactly
+   the sort values and filter keys UserRepository().findAll validates against. */
+export const UserQuerySchema = datatableQueryParams({
+	sortFields: userSortableFields,
+	filterFields: userFilterableFields,
+	filterExample: userFilterExample,
 });

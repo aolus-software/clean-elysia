@@ -12,7 +12,7 @@ These apply to **every** change, regardless of which files it touches. Read them
 
 | Rule | Scope |
 | ---- | ----- |
-| [contradiction-halt.md](./contradiction-halt.md) | A request that contradicts a rule, the architecture, or a security invariant is reported and halted — never silently implemented or worked around. Lists the issues already on record |
+| [contradiction-halt.md](./contradiction-halt.md) | A request that contradicts a rule, the architecture, or a security invariant is reported and halted — never silently implemented or worked around. Lists the invariants and known sharp edges |
 | [documentation.md](./documentation.md) | A doc your change makes wrong is fixed in the **same** change; lists every doc that must stay in sync |
 | [audit-findings.md](./audit-findings.md) | How an audit finding is written: five blocks, plain language, severity by consequence, CONFIRMED vs SUSPECT — the writing contract for [`/audit-flow`](../commands/audit-flow.md) |
 | [clean-code.md](./clean-code.md) | Formatting, explicit types, no `any`, no `console.*`, comment density |
@@ -70,6 +70,7 @@ rather than picking a side silently — [contradiction-halt.md](./contradiction-
   also throw `UnprocessableEntityError` for uniqueness, which is a business rule. Both sibling repos
   do it the other way round. See [services-crud.md](./services-crud.md).
 
-Resolved since this section was written: the `baseApp`-on-protected-modules question (the plugins
-inside `baseApp` now declare `{ as: "global" }`, so their hooks apply app-wide — see
-[plugins.md](./plugins.md)) and the unseeded `"role update"` permission (now `"role edit"`).
+  One thing this *does* settle: since the repository is what throws, the repository is where the
+  message lives, so those throws go through `t()` — [i18n.md](./i18n.md) rule 6 records why that
+  overrides the usual "no `t()` in a repository". The placement question itself stays open; if the
+  checks move up, the `t()` calls move with them.

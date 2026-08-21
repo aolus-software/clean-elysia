@@ -100,21 +100,23 @@ In this repo a module composes **one or the other**, never both:
   `src/modules/settings/`
 
 `AuthPlugin` does not itself `.use(baseApp)`, so it is fair to ask whether the protected modules get
-the global stack at all. They do — but only because the hooks were made global on 2026-08-20.
+the global stack at all. They do — but only because every hook inside `baseApp` declares
+`{ as: "global" }`.
 
-`RequestPlugin`, `DiPlugin`, `PerformancePlugin`, and `BodyLimitPlugin` previously used a bare
-`.derive(...)` / `.onBeforeHandle(...)` / `.onAfterHandle(...)`, which Elysia scopes **local** — meaning
-they applied to routes declared *inside those plugin instances*, i.e. none. `ctx.container` and
-`ctx.requestId` were never available to any handler, the 100KB body limit never rejected anything, and
-the performance timer never ran. All four now pass `{ as: "global" }`, verified by request: a 200KB
-body returns 413, and `requestId` / `startedAt` / `container` are present on handlers in modules that
-chain `baseApp` **and** in modules that do not.
+That declaration is load-bearing and easy to omit. A bare `.derive(...)` /
+`.onBeforeHandle(...)` / `.onAfterHandle(...)` is scoped **local** by Elysia, meaning it applies only
+to routes declared *inside that plugin instance* — which, for a plugin that declares no routes, is
+none at all. A locally-scoped `RequestPlugin` puts no `requestId` on any handler, a locally-scoped
+`BodyLimitPlugin` rejects nothing, and a locally-scoped `PerformancePlugin` never times anything. All
+of it fails silently.
 
-`SecurityPlugin`'s contents (cors, helmet, rate limit) were never affected — those libraries set their
-own scope and have always applied app-wide.
+So: **when you add a lifecycle hook or a derive to a plugin in `baseApp`, pass `{ as: "global" }`**,
+and verify it by request rather than by reading — a 200KB body against the 100KB limit should return
+413, and `requestId` / `startedAt` / `container` should be present on handlers in modules that chain
+`baseApp` *and* in modules that do not.
 
-The practical rule: **when you add a lifecycle hook or derive to a plugin in `baseApp`, pass
-`{ as: "global" }`.** A bare hook silently does nothing, which is the worst possible failure mode.
+`SecurityPlugin`'s contents (cors, helmet, rate limit) are exempt — those libraries set their own
+scope and apply app-wide regardless.
 
 Authentication proves *who*; it does not decide *whether*. Every protected route still needs
 `PermissionGuard.canActivate(user, [...])` or `RoleGuard.canActivate(user, [...])` in its

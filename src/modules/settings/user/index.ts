@@ -1,6 +1,5 @@
 import { PermissionGuard, RoleGuard } from "@guards";
 import { AuthPlugin } from "@plugins";
-import { DatatableQueryParams } from "@types";
 import {
 	commonPaginatedResponse,
 	commonResponse,
@@ -13,6 +12,7 @@ import {
 	UserCreateSchema,
 	UserDetailSchema,
 	UserListSchema,
+	UserQuerySchema,
 	UserResetPasswordSchema,
 	UserUpdateSchema,
 } from "./schema";
@@ -28,8 +28,8 @@ export const UserModule = new Elysia({
 	.use(AuthPlugin)
 	.get(
 		"",
-		async ({ query }) => {
-			const queryParam = DatatableToolkit.parseFilter(query);
+		async ({ query, request }) => {
+			const queryParam = DatatableToolkit.parseFilter(query, request.url);
 			const result = await UserService.findAll(queryParam);
 
 			return ResponseToolkit.success(
@@ -42,14 +42,19 @@ export const UserModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user list"]);
 			},
-			query: DatatableQueryParams,
+			query: UserQuerySchema,
 			detail: {
 				summary: "List all users",
 				description:
-					"Retrieve a list of all users. Requires 'user list' permission.",
+					"Retrieve a paginated list of users. Soft-deleted users are excluded. " +
+					"Requires 'user list' permission. `search` matches name, email and " +
+					"status. Sortable and filterable fields are listed on the individual " +
+					"query parameters; `filter[role_id]` takes a role UUID and narrows to " +
+					"users holding that role. An unsupported `sort` is rejected with 422 " +
+					"and an unsupported `filter[<key>]` with 400.",
 			},
 			response: commonPaginatedResponse(UserListSchema, {
-				include: [200, 400, 401, 403, 500],
+				include: [200, 400, 401, 403, 422, 500],
 			}),
 		},
 	)

@@ -1,3 +1,9 @@
+import {
+	roleFilterableFields,
+	roleFilterExample,
+	roleSortableFields,
+} from "@repositories";
+import { datatableQueryParams } from "@types";
 import { t } from "elysia";
 
 export const RoleListSchema = t.Object({
@@ -25,4 +31,14 @@ export const UpdateRoleSchema = t.Object({
 	permission_ids: t.Array(t.String({ format: "uuid" }), {
 		description: "Array of permission UUIDs to assign",
 	}),
+});
+
+// === QUERY ===
+
+/* Documented against the repository's own allow-lists, so /docs shows exactly
+   the sort values and filter keys RoleRepository().findAll validates against. */
+export const RoleQuerySchema = datatableQueryParams({
+	sortFields: roleSortableFields,
+	filterFields: roleFilterableFields,
+	filterExample: roleFilterExample,
 });

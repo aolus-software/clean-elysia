@@ -7,7 +7,6 @@ interface IAppConfig {
 	APP_ENV: "development" | "staging" | "production";
 	APP_TIMEZONE: string;
 	APP_KEY: string;
-	APP_JWT_SECRET: string;
 
 	// log
 	LOG_LEVEL: "info" | "warn" | "debug";
@@ -33,7 +32,6 @@ export const AppConfig: IAppConfig = {
 	APP_ENV: env.NODE_ENV,
 	APP_TIMEZONE: env.APP_TIMEZONE,
 	APP_KEY: env.APP_KEY,
-	APP_JWT_SECRET: env.APP_JWT_SECRET,
 
 	LOG_LEVEL: env.LOG_LEVEL,
 

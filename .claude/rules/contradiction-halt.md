@@ -47,26 +47,13 @@ This applies whether the contradiction is with:
 - It does not license scope creep in the other direction either: noticing an unrelated defect means
   *reporting* it, not fixing it inside the current change.
 
-## Known contradictions already on record
+## Invariants and known sharp edges
 
-These are confirmed in this repository and awaiting a decision. Do not build on any of them without
-raising it first:
+Confirmed facts about this repository as it stands. Do not build on any of them without raising it
+first:
 
-- **~~Password-reset links never expire.~~ ✅ RESOLVED 2026-08-20.** `password_reset_tokens` now has
-  an `expired_at` column, `AuthMailService.sendResetPasswordEmail` sets it from
-  `resetPasswordLifetime()`, and `AuthService.resetPassword` rejects an expired row the way
-  `verifyEmail` already did. The migration deletes pre-existing rows, since a token issued before
-  expiry existed has unknown age and unlimited validity.
-
-  Fixing it surfaced a second bug worth remembering: the lifetimes in
-  `src/libs/default/token-lifetime.ts` were **constants evaluated at module load**, so
-  `verificationTokenLifetime` meant "process start + 1 hour" and every verification token minted
-  after the first hour of uptime was issued already expired. They are functions now. A date constant
-  at module scope is almost always this bug.
-
-- **The `.agents/skills/` bundle is a generation behind its sibling repositories.**
-  `.claude/skills` is a symlink to `.agents/skills`. Treat the bundle as vendored: do not edit it as
-  part of unrelated work, and flag rather than "modernise" it.
+- **The `.agents/skills/` bundle is vendored.** `.claude/skills` is a symlink to `.agents/skills`.
+  Do not edit it as part of unrelated work, and flag rather than "modernise" it.
 - **There are no tests and no test runner.** `package.json` defines no test script and `CLAUDE.md`
   says so explicitly, so none of the invariants above has a regression test. Do not cite a test as
   evidence that something is safe, and do not invent `bun test` commands.

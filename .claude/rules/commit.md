@@ -28,7 +28,7 @@ bun run build
 
 Three things follow from that.
 
-**It is not lint-staged.** `package.json` does carry a `lint-staged` block (`"*.ts": ["bun run lint:fix", "bun run format"]`) and `lint-staged` is a devDependency, but nothing invokes it — the hook calls the scripts on the **whole tree**, not on staged files. Do not assume your unstaged files are safe from `format` and `lint:fix`.
+**It is not lint-staged.** There is no `lint-staged` key in `package.json` and no `lint-staged` dependency. The hook calls the scripts on the **whole tree**, not on staged files. Do not assume your unstaged files are safe from `format` and `lint:fix`.
 
 **It touches the database and the migration folder.** `drizzle-kit generate` can write a new file into the migrations directory and `drizzle-kit migrate` runs against whatever `DATABASE_URL` points at. Check `git status` after the hook and stage or discard what it produced deliberately — an accidental empty migration is the classic mess here.
 

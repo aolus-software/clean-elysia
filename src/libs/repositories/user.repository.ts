@@ -1,8 +1,18 @@
-import { db, DbTransaction, userRoles, users, UserStatusEnum } from "@database";
+import {
+	db,
+	DbTransaction,
+	userRoles,
+	users,
+	UserStatus,
+	UserStatusEnum,
+} from "@database";
 import { defaultSort } from "@default";
 import { BadRequestError, UnauthorizedError } from "@errors";
+import { t } from "@i18n";
 import {
 	DatatableType,
+	FilterField,
+	filterFieldNames,
 	PaginationResponse,
 	SortDirection,
 	UserCreate,
@@ -11,19 +21,57 @@ import {
 	UserInformation,
 	UserList,
 } from "@types";
-import { Hash } from "@utils";
+import { DatatableToolkit, Hash } from "@utils";
 import {
 	and,
 	asc,
 	desc,
 	eq,
 	exists,
+	gte,
 	ilike,
+	inArray,
 	isNull,
+	lte,
 	or,
 	SQL,
 } from "drizzle-orm";
 import { NotFoundError } from "elysia";
+
+/* Keys are the API-facing sort names (camelCase, aligned with the shared
+   defaultSort constant); values are the snake_case Drizzle columns they map
+   onto. */
+const userOrderableColumns = {
+	id: users.id,
+	name: users.name,
+	email: users.email,
+	status: users.status,
+	createdAt: users.created_at,
+	updatedAt: users.updated_at,
+};
+
+/* The ?sort= and filter[...] values this repository accepts. Exported so the
+   module can document them in OpenAPI from one source of truth rather than
+   restating the list. An unrecognised value is rejected, not ignored. */
+export const userSortableFields = Object.keys(userOrderableColumns);
+export const userFilterableFields: FilterField[] = [
+	{ field: "status", enum: Object.values(UserStatus) },
+	"name",
+	"email",
+	{ field: "role_id", kind: "id" },
+	{ field: "createdAt", kind: "date" },
+	{ field: "updatedAt", kind: "date" },
+];
+
+/* Example value per non-enum filter key, rendered as the concrete sample in
+   /docs. Enum keys take their example from the enum. */
+export const userFilterExample: Record<string, string> = {
+	name: "jane",
+	email: "jane@example.com",
+	role_id: "550e8400-e29b-41d4-a716-446655440000",
+	createdAt: "2024-01-01,2024-12-31",
+	updatedAt: "2024-01-01,2024-12-31",
+};
 
 export const UserRepository = () => {
 	const dbInstance = db;
@@ -49,6 +97,12 @@ export const UserRepository = () => {
 				queryParam.filter || null;
 			const offset = (page - 1) * limit;
 
+			DatatableToolkit.assertFilterKeys(
+				filter,
+				filterFieldNames(userFilterableFields),
+			);
+			DatatableToolkit.assertFilterEnums(filter, userFilterableFields);
+
 			let whereCondition: SQL | undefined = isNull(users.deleted_at);
 			if (search) {
 				whereCondition = and(
@@ -61,32 +115,32 @@ export const UserRepository = () => {
 				);
 			}
 
-			let filteredCondition: SQL | undefined = undefined;
+			/* Every matching filter is ANDed together. Assigning to a single
+			   accumulator here instead would let the last matching block overwrite
+			   the earlier ones, silently dropping every filter but one. */
+			const filterClauses: (SQL | undefined)[] = [];
 			if (filter) {
 				if (filter.status) {
-					filteredCondition = and(
-						whereCondition,
-						eq(users.status, filter.status as UserStatusEnum),
+					filterClauses.push(
+						inArray(
+							users.status,
+							DatatableToolkit.filterValues(filter.status) as UserStatusEnum[],
+						),
 					);
 				}
 
 				if (filter.name) {
-					filteredCondition = and(
-						whereCondition,
-						ilike(users.name, `%${filter.name.toString()}%`),
-					);
+					filterClauses.push(ilike(users.name, `%${filter.name.toString()}%`));
 				}
 
 				if (filter.email) {
-					filteredCondition = and(
-						whereCondition,
+					filterClauses.push(
 						ilike(users.email, `%${filter.email.toString()}%`),
 					);
 				}
 
 				if (filter.role_id) {
-					filteredCondition = and(
-						whereCondition,
+					filterClauses.push(
 						exists(
 							database
 								.select()
@@ -94,36 +148,48 @@ export const UserRepository = () => {
 								.where(
 									and(
 										eq(userRoles.user_id, users.id),
-										eq(userRoles.role_id, filter.role_id as string),
+										inArray(
+											userRoles.role_id,
+											DatatableToolkit.filterValues(filter.role_id),
+										),
 									),
 								),
 						),
+					);
+				}
+
+				if (filter.createdAt) {
+					const { from, to } = DatatableToolkit.filterDateRange(
+						filter.createdAt,
+						"createdAt",
+					);
+					filterClauses.push(
+						gte(users.created_at, from),
+						lte(users.created_at, to),
+					);
+				}
+
+				if (filter.updatedAt) {
+					const { from, to } = DatatableToolkit.filterDateRange(
+						filter.updatedAt,
+						"updatedAt",
+					);
+					filterClauses.push(
+						gte(users.updated_at, from),
+						lte(users.updated_at, to),
 					);
 				}
 			}
 
 			const finalWhereCondition: SQL | undefined = and(
 				whereCondition,
-				filteredCondition ? filteredCondition : undefined,
+				...filterClauses,
 			);
 
-			const validateOrderBy = {
-				id: users.id,
-				name: users.name,
-				email: users.email,
-				status: users.status,
-				created_at: users.created_at,
-				updated_at: users.updated_at,
-			};
-
-			type OrderableKey = keyof typeof validateOrderBy;
-			const normalizedOrderBy: OrderableKey = (
-				Object.keys(validateOrderBy) as OrderableKey[]
-			).includes(orderBy as OrderableKey)
-				? (orderBy as OrderableKey)
-				: "id";
-
-			const orderColumn = validateOrderBy[normalizedOrderBy];
+			const orderColumn = DatatableToolkit.parseSort(
+				userOrderableColumns,
+				orderBy,
+			);
 
 			const [data, totalCount] = await Promise.all([
 				database.query.users.findMany({
@@ -196,10 +262,10 @@ export const UserRepository = () => {
 				.limit(1);
 
 			if (isEmailExist.length > 0) {
-				throw new BadRequestError("Email already exists", [
+				throw new BadRequestError(t("user.emailExists"), [
 					{
 						field: "email",
-						message: "Email already exists",
+						message: t("user.emailExists"),
 					},
 				]);
 			}
@@ -232,10 +298,10 @@ export const UserRepository = () => {
 			}
 
 			if (user.length === 0) {
-				throw new BadRequestError("Failed to create user", [
+				throw new BadRequestError(t("user.createFailed"), [
 					{
 						field: "user",
-						message: "User creation failed",
+						message: t("user.createFailedDetail"),
 					},
 				]);
 			}
@@ -270,10 +336,10 @@ export const UserRepository = () => {
 			});
 
 			if (!userDetail) {
-				throw new BadRequestError("Failed to retrieve created user", [
+				throw new BadRequestError(t("user.createRetrieveFailed"), [
 					{
 						field: "user",
-						message: "User retrieval failed",
+						message: t("user.retrieveFailedDetail"),
 					},
 				]);
 			}
@@ -331,7 +397,7 @@ export const UserRepository = () => {
 			});
 
 			if (!user) {
-				throw new NotFoundError("User not found");
+				throw new NotFoundError(t("user.notFound"));
 			}
 
 			return {
@@ -360,7 +426,7 @@ export const UserRepository = () => {
 			});
 
 			if (!user) {
-				throw new NotFoundError("User not found");
+				throw new NotFoundError(t("user.notFound"));
 			}
 
 			await database
@@ -397,7 +463,7 @@ export const UserRepository = () => {
 			});
 
 			if (!user) {
-				throw new NotFoundError("User not found");
+				throw new NotFoundError(t("user.notFound"));
 			}
 
 			await database
@@ -461,7 +527,7 @@ export const UserRepository = () => {
 			});
 
 			if (!user) {
-				throw new UnauthorizedError("User not found");
+				throw new UnauthorizedError(t("user.notFound"));
 			}
 
 			return {

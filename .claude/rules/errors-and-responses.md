@@ -78,11 +78,11 @@ throw new UnauthorizedError("Invalid credentials");
 throw new NotFoundError("User not found");
 ```
 
-All six classes now agree with the table: `code`, `toResponse()`, and `ErrorHandlerPlugin` return the
-same status. `NotFoundError` used to declare **422** in both its `code` and its `toResponse()` while
-the plugin mapped it to 404 — fixed 2026-08-20. If you add an error class, set `code` and
-`toResponse()` to the status the plugin assigns it, and add the branch to `ErrorHandlerPlugin` in the
-same change.
+All six classes agree with the table: `code`, `toResponse()`, and `ErrorHandlerPlugin` return the
+same status. Keep it that way — a class whose `code` disagrees with the status the plugin assigns it
+sends callers reading `error.code` somewhere the response never goes. If you add an error class, set
+`code` and `toResponse()` to the status the plugin assigns it, and add the branch to
+`ErrorHandlerPlugin` in the same change.
 
 ## What `ErrorHandlerPlugin` also handles
 

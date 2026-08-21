@@ -18,15 +18,15 @@ strings use the seeded `<group> <action>` vocabulary; `edit` is the update actio
 
 ## List
 
-Parse the datatable query with `DatatableToolkit.parseFilter(query)` and hand the result straight to
+Parse the datatable query with `DatatableToolkit.parseFilter(query, request.url)` and hand the result straight to
 the service. The repository returns `PaginationResponse<T>`, so pass it through unchanged and declare
 `commonPaginatedResponse`.
 
 ```ts
 .get(
 	"",
-	async ({ query }) => {
-		const queryParam = DatatableToolkit.parseFilter(query);
+	async ({ query, request }) => {
+		const queryParam = DatatableToolkit.parseFilter(query, request.url);
 		const result = await RoleService.findAll(queryParam);
 
 		return ResponseToolkit.success(result, "Role list retrieved successfully", 200);
@@ -35,21 +35,31 @@ the service. The repository returns `PaginationResponse<T>`, so pass it through 
 		beforeHandle: ({ user }) => {
 			PermissionGuard.canActivate(user, ["role list"]);
 		},
-		query: DatatableQueryParams,
+		query: RoleQuerySchema,
 		detail: {
 			summary: "List all roles",
 			description: "Retrieve a list of all roles. Requires 'role list' permission.",
 		},
 		response: commonPaginatedResponse(RoleListSchema, {
-			include: [200, 400, 401, 403, 500],
+			include: [200, 400, 401, 403, 422, 500],
 		}),
 	},
 )
 ```
 
-`DatatableQueryParams` comes from `@types` — do not redeclare page/limit/search/sort/filter per
-module. `400` is always in the `include` for a list route: the repository rejects an unknown sort key
-or filter with a `BadRequestError`.
+`RoleQuerySchema` is built in the module's own `schema.ts` from
+`datatableQueryParams({ sortFields, filterFields })`, passing the repository's exported allow-lists —
+`roleSortableFields` and `roleFilterableFields`. Do not redeclare page/perPage/search/sort/filter per
+module, and do not fall back to the bare `DatatableQueryParams` from `@types`: a list route that
+advertises no allowed sort values or filter keys is an incomplete route. See
+[validation.md](./validation.md) and [repositories.md](./repositories.md).
+
+Two codes are always in the `include` for a list route:
+
+- `422` — `sort` and `sortDirection` are closed unions in the schema, so an unrecognised value is
+  rejected by validation before the handler runs.
+- `400` — filter keys arrive as separate flat query parameters (`filter[name]=x`) that the schema
+  cannot name, so the repository's `assertFilterKeys` is what rejects an unknown one.
 
 ## Create
 
@@ -161,7 +171,7 @@ Delete returns 200 with a message, not 204 — the envelope always has a body.
 
 | Route  | `include` |
 | ------ | --------- |
-| list   | `[200, 400, 401, 403, 500]` |
+| list   | `[200, 400, 401, 403, 422, 500]` |
 | create | `[201, 400, 401, 403, 500]` |
 | detail | `[200, 400, 401, 403, 404, 500]` |
 | update | `[200, 400, 401, 403, 404, 500]` |

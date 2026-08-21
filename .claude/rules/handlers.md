@@ -94,9 +94,9 @@ The third argument must carry:
   is the pattern.
 - Only `home` and `auth` chain `baseApp`; `profile` and all four `settings/*` modules chain
   `AuthPlugin` alone, and `src/server.ts` does not apply `baseApp` at the root either. That is fine:
-  every plugin inside `baseApp` now declares `{ as: "global" }`, so its hooks reach every route in the
-  app regardless of which module chained what. See [plugins.md](./plugins.md) — and note this was only
-  made true on 2026-08-20; before that four of those plugins applied to nothing at all.
+  every plugin inside `baseApp` declares `{ as: "global" }`, so its hooks reach every route in the
+  app regardless of which module chained what. That declaration is what makes it work — see
+  [plugins.md](./plugins.md), which explains why omitting it fails silently.
 - Group routes with comment banners (`// === LOGIN ===`) as in `src/modules/auth/index.ts`. No JSDoc
   per handler.
 - Services are imported statically at the top: `import { RoleService } from "./service"`. Never
