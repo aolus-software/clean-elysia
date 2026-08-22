@@ -88,7 +88,7 @@ change — that is [documentation.md](./documentation.md).
 ## Known gaps in the current map
 
 - **Guard strings are checked against the seed, always.** The update action is `"role edit"`, not
-  `"role update"` — `rbac.seed.ts` never produces the latter. Naming a permission the seed does not
+  `"role update"` — `permission.seed.ts` never produces the latter. Naming a permission the seed does not
   produce fails **closed**: only a `superuser` (who bypasses the guard) can reach the route, and an
   `admin` holding all 15 seeded permissions gets a 403. Nothing breaks loudly, which is exactly why
   this class of mistake survives. Grep the seed before writing a guard string.

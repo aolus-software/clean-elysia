@@ -195,7 +195,7 @@ make fresh           # db-drop + db-push + db-seed — DESTRUCTIVE
 - `db-push` skips the migration file entirely and syncs the schema directly — development only, never
   against a shared database.
 - Seeds live in `src/libs/database/postgres/seed/`. Changing the RBAC catalogue means editing
-  `rbac.seed.ts`, and every guard string must still match — see [rbac.md](./rbac.md).
+  `permission.seed.ts`, and every guard string must still match — see [rbac.md](./rbac.md).
 
 ## Don't
 

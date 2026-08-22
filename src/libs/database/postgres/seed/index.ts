@@ -1,20 +1,23 @@
-import { RBACSeeder } from "./rbac.seed";
-import { UserSeeder } from "./user.seed";
+import { log } from "@utils";
 
-const run = async () => {
-	await RBACSeeder();
-	await UserSeeder();
+import { seedPermissions } from "./permission.seed";
+import { seedRoles } from "./role.seed";
+import { seedUsers } from "./user.seed";
+
+/* Order matters: roles grant the permissions seeded before them, and users are
+   assigned the roles seeded before them. */
+const seed = async (): Promise<void> => {
+	await seedPermissions();
+	await seedRoles();
+	await seedUsers();
 };
 
-await run()
+seed()
 	.then(() => {
-		// eslint-disable-next-line
-		console.log("Seeding completed successfully");
-	})
-	.finally(() => {
+		log.info("Seeding completed successfully");
 		process.exit(0);
 	})
-	.catch((error) => {
-		// eslint-disable-next-line
-		console.error("Error occurred during seeding:", error);
+	.catch((error: unknown) => {
+		log.error({ error }, "Seeding failed");
+		process.exit(1);
 	});

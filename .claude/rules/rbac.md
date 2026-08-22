@@ -53,7 +53,7 @@ on the next route someone adds by copy-paste.
 
 ## Permission names come from the seed, not from your imagination
 
-`src/libs/database/postgres/seed/rbac.seed.ts` builds the whole catalogue as
+`src/libs/database/postgres/seed/permission.seed.ts` builds the whole catalogue as
 `` `${group} ${permission}` `` over:
 
 - groups: `user`, `role`, `permission`
@@ -66,7 +66,7 @@ A guard that names a string the seed does not produce fails closed: nobody can e
 permission, so every non-superuser gets a 403 on a route that looks correctly gated. Grep the seed
 before inventing a name.
 
-If a route genuinely needs a permission outside the 15, extend `rbac.seed.ts` in the same change —
+If a route genuinely needs a permission outside the 15, extend `permission.seed.ts` in the same change —
 or gate it on `RoleGuard.canActivate(user, ["superuser"])` if it is a privilege-granting operation
 (see below). Do not leave a route pointing at a permission that does not exist.
 
@@ -95,7 +95,7 @@ would advertise a status nothing can produce. The reverse mistake is worse: a gu
 
 - [ ] The module chains `.use(AuthPlugin)` above this route.
 - [ ] The route has a `beforeHandle` calling `PermissionGuard` or `RoleGuard`.
-- [ ] Every permission string it names exists in `rbac.seed.ts`.
+- [ ] Every permission string it names exists in `permission.seed.ts`.
 - [ ] Privilege-granting or account-takeover routes use `RoleGuard(["superuser"])`.
 - [ ] `403` (and `401`) are in the `include` array.
 - [ ] The `detail.description` states the requirement in words, e.g. "Requires 'role list' permission."
