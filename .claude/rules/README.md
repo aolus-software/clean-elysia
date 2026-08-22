@@ -29,7 +29,7 @@ Ordered outside-in, the way a request travels.
 | [handlers-crud.md](./handlers-crud.md) | `src/modules/<name>/index.ts` — the canonical five-route CRUD module and its status codes |
 | [validation.md](./validation.md) | `src/modules/<name>/schema.ts` — TypeBox request/response schemas, naming, formats, what never appears in a response |
 | [services.md](./services.md) | `src/modules/<name>/service.ts` — plain-object services, transaction ownership, cache invalidation, error vocabulary |
-| [services-crud.md](./services-crud.md) | `src/modules/<name>/service.ts` — the canonical five-method CRUD service, and **where the existence/uniqueness checks live in this repo** |
+| [services-crud.md](./services-crud.md) | `src/modules/<name>/service.ts` — the canonical five-method CRUD service, which **owns the existence and uniqueness checks** |
 | [repositories.md](./repositories.md) | `src/libs/repositories/*.repository.ts` — factory functions, optional `tx?: DbTransaction`, the `isNull(<table>.deleted_at)` soft-delete filter, sort allow-listing |
 | [schema.md](./schema.md) | `src/libs/database/postgres/schema/` — Drizzle tables, the three-export enum pattern, relations, the `schema` object registration step, migrations |
 | [shared-code.md](./shared-code.md) | `src/libs/<bucket>/` — which bucket a thing belongs in, the alias table, barrel exports, and the no-cross-module-imports rule |
@@ -65,12 +65,27 @@ Ordered outside-in, the way a request travels.
 Recorded deliberately rather than resolved by fiat, because resolving it is a code change. Raise it
 rather than picking a side silently — [contradiction-halt.md](./contradiction-halt.md).
 
-- **Where CRUD checks live.** [repositories.md](./repositories.md) says the repository throws
-  `NotFoundError` for a missing row and leaves everything else to the service, but the repositories
-  also throw `UnprocessableEntityError` for uniqueness, which is a business rule. Both sibling repos
-  do it the other way round. See [services-crud.md](./services-crud.md).
+- **The status code for a uniqueness conflict is not uniform.** `role` and `permission` throw
+  `UnprocessableEntityError` (422); `user` throws `BadRequestError` (400) for a duplicate email. The
+  sibling `clean-elysia-prisma` uses 400 for all three. Both are defensible, and the `include` arrays
+  on the affected routes already match whichever one each module throws — so aligning them is a
+  public API change plus an OpenAPI change, not a cleanup. Preserve the module's existing class;
+  raise the question rather than deciding it in passing. See
+  [services-crud.md](./services-crud.md).
 
-  One thing this *does* settle: since the repository is what throws, the repository is where the
-  message lives, so those throws go through `t()` — [i18n.md](./i18n.md) rule 6 records why that
-  overrides the usual "no `t()` in a repository". The placement question itself stays open; if the
-  checks move up, the `t()` calls move with them.
+### Resolved: where CRUD checks live
+
+**The service owns existence and uniqueness checks; the repository only queries.** This was an open
+tension between [repositories.md](./repositories.md) and the code — the repositories threw
+`NotFoundError` *and* `UnprocessableEntityError`, leaving the CRUD services as pass-throughs, while
+both sibling repos did the opposite.
+
+It is settled in favour of the service, and not merely by majority: a repository that throws
+`NotFoundError` imported from `elysia` makes the persistence layer depend on the web framework, which
+is the one thing the layering exists to prevent.
+
+Consequences, all now reflected in the rules:
+
+- Repository reads return `null`; the service turns that into a 404 — [repositories.md](./repositories.md).
+- The `t()` calls moved up with the throws — [i18n.md](./i18n.md) rule 6.
+- Services own the transaction around multi-table writes — [services-crud.md](./services-crud.md).

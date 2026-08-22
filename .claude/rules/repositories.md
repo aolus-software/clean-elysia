@@ -91,13 +91,13 @@ update: async (
   	{ field: "status", enum: Object.values(UserStatus) },
   	"name",
   	"email",
-  	"role_id",
+  	"roleId",
   ];
 
   export const userFilterExample: Record<string, string> = {
   	name: "jane",
   	email: "jane@example.com",
-  	role_id: "550e8400-e29b-41d4-a716-446655440000",
+  	roleId: "550e8400-e29b-41d4-a716-446655440000",
   };
   ```
 
@@ -114,28 +114,45 @@ update: async (
 - **Counts**: use `database.$count(table, whereCondition)` alongside the paged `findMany` — run both inside `Promise.all([...])`.
 - **Returning**: paginated reads return `PaginationResponse<T>` from `@types`. Detail/list item DTOs (`UserList`, `UserDetail`) are also in `@types` — define a new one there if the shape differs.
 
-## Messages on a repository throw go through `t()`
+## Read methods return `null`, they do not throw
 
-Where a repository does throw, its message is a catalog key, not an English literal:
+A read that finds nothing resolves to `null`. The **service** turns that into `NotFoundError` — see
+[services-crud.md](./services-crud.md). This is what lets one repository method serve a 404 in one
+caller and a silent skip in another.
 
 ```ts
-import { t } from "@i18n";
+findById: async (id: string, tx?: DbTransaction) => {
+	const database = tx || dbInstance;
 
-if (!role) {
-	throw new NotFoundError(t("role.notFound"));
-}
+	const role = await database.query.roles.findFirst({
+		where: eq(roles.id, id),
+	});
 
-if (isNameExists) {
-	throw new UnprocessableEntityError(t("role.nameExists"), [
-		{ field: "name", message: t("role.nameExistsFor", { name: data.name }) },
-	]);
-}
+	return role || null;
+},
 ```
 
-This is a deliberate exception to the usual "no `t()` in a repository" principle, and it exists only
-because **this repo puts the checks in the repository** — see
-[services-crud.md](./services-crud.md) and rule 6 of [i18n.md](./i18n.md). A repository method that
-only queries has no message to translate and should not import `@i18n`.
+Each entity exposes the lookups its service needs to run those checks:
+
+| Method | For |
+| --- | --- |
+| `findById(id, tx?)` | the existence check on update / delete |
+| `findByName(name, excludeId?, tx?)` | the uniqueness check on `role` / `permission` |
+| `findLiveByEmail(email, excludeId?, tx?)` | the uniqueness check on `user`, filtering `deleted_at` |
+| `findExistingByNames(names, tx?)` | `permission` create, which takes a batch and needs every collision |
+| `getDetail(id, tx?)` | the detail shape, `null` when absent |
+
+`excludeId` exists so an update does not collide with the record being updated. Pass it.
+
+**A repository does not import `@errors` or `@i18n` for a business rule.** The message belongs to
+whoever throws, and that is the service — rule 6 of [i18n.md](./i18n.md). The two surviving throws in
+`user.repository.ts` (`user.createFailed`, `user.createRetrieveFailed`) are the exception and are not
+business rules: an `INSERT ... RETURNING` that comes back empty is a condition only the repository
+can observe. Do not add a third by moving a check back down.
+
+The datatable guards are also still the repository's, and they throw `BadRequestError`:
+`assertFilterKeys`, `assertFilterEnums`, `parseSort`, `filterDateRange`. Those validate the *query
+inputs*, not the domain.
 
 ## Filters come off the raw URL, not the validated query
 
@@ -175,7 +192,7 @@ A comma means different things depending on the key, so each key declares its `k
 export const userFilterableFields: FilterField[] = [
 	{ field: "status", enum: Object.values(UserStatus) },
 	"name",
-	{ field: "role_id", kind: "id" },
+	{ field: "roleId", kind: "id" },
 	{ field: "createdAt", kind: "date" },
 ];
 ```
@@ -185,10 +202,10 @@ a single id is the common case — it silently makes multi-value input match not
 
 ```ts
 // WRONG — one id only, and a comma-separated value matches no row at all
-eq(userRoles.role_id, filter.role_id as string)
+eq(userRoles.role_id, filter.roleId as string)
 
 // RIGHT
-inArray(userRoles.role_id, DatatableToolkit.filterValues(filter.role_id))
+inArray(userRoles.role_id, DatatableToolkit.filterValues(filter.roleId))
 ```
 
 **Date keys go through `DatatableToolkit.filterDateRange(value, key)`**, which returns an inclusive
@@ -203,7 +220,7 @@ timezone, so the window lands on the calendar day the caller meant.
 
 ## What repositories should NOT do
 
-- No `throw new BadRequestError(...)` for business rules. Throw `NotFoundError` from `elysia` when a row is genuinely missing; everything else belongs in the service.
+- **No business rules, and that includes existence and uniqueness.** A read returns `null`; the service decides whether that is a 404. Do not `throw new NotFoundError(...)` for a missing row and do not check uniqueness before a write — both belong to the service ([services-crud.md](./services-crud.md)).
 - No cache reads/writes. Caching is the service's job (or `AuthPlugin`'s).
 - No password hashing / JWT signing / mail sending. Repositories only own SQL.
 - No cross-table orchestration that requires a transaction the caller didn't supply — if you need a transaction, accept `tx` and let the caller open it.

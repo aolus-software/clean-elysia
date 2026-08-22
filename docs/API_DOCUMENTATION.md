@@ -178,18 +178,18 @@ GET /settings/users?page=1&perPage=10&search=admin&sort=createdAt&sortDirection=
 
 The allowed sort fields and filter keys per resource:
 
-| Resource                | `sort`                                                    | `filter[...]`                                                         |
-| ----------------------- | --------------------------------------------------------- | --------------------------------------------------------------------- |
-| `/settings/roles`       | `id`, `name`, `createdAt`, `updatedAt`                    | `name`, `createdAt`, `updatedAt`                                      |
-| `/settings/permissions` | `id`, `name`, `group`, `createdAt`, `updatedAt`           | `name`, `group`, `createdAt`, `updatedAt`                             |
-| `/settings/users`       | `id`, `name`, `email`, `status`, `createdAt`, `updatedAt` | `status` (enum), `name`, `email`, `role_id`, `createdAt`, `updatedAt` |
+| Resource                | `sort`                                                    | `filter[...]`                                                        |
+| ----------------------- | --------------------------------------------------------- | -------------------------------------------------------------------- |
+| `/settings/roles`       | `id`, `name`, `createdAt`, `updatedAt`                    | `name`, `createdAt`, `updatedAt`                                     |
+| `/settings/permissions` | `id`, `name`, `group`, `createdAt`, `updatedAt`           | `name`, `group`, `createdAt`, `updatedAt`                            |
+| `/settings/users`       | `id`, `name`, `email`, `status`, `createdAt`, `updatedAt` | `status` (enum), `name`, `email`, `roleId`, `createdAt`, `updatedAt` |
 
 A comma means different things per key, and `/docs` says which on each one:
 
 | Key kind                        | Comma means               | Example                                   |
 | ------------------------------- | ------------------------- | ----------------------------------------- |
 | enum (`status`)                 | any of these values       | `filter[status]=active,suspended`         |
-| id (`role_id`)                  | any of these ids          | `filter[role_id]=uuid-a,uuid-b`           |
+| id (`roleId`)                   | any of these ids          | `filter[roleId]=uuid-a,uuid-b`            |
 | date (`createdAt`, `updatedAt`) | the two ends of a range   | `filter[createdAt]=2024-01-01,2024-12-31` |
 | plain text (`name`, `email`)    | nothing — a literal comma | `filter[name]=jane`                       |
 

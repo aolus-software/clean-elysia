@@ -65,6 +65,8 @@ export const UserRepository = () => {
 
 Services call `Repository().method(...)` — note the invocation; the factory must be called each time, not destructured once.
 
+**The service owns the existence and uniqueness checks; the repository only queries.** A repository read resolves to `null` when nothing matches, and the service turns that into `NotFoundError`. A repository never throws for a missing row or a duplicate, and never imports `@i18n` for a business rule — the `t()` key belongs to the throw. Services also own the transaction around any multi-table write. See `.claude/rules/services-crud.md` and `.claude/rules/repositories.md`.
+
 ### Authorization
 
 `AuthPlugin` (`src/libs/plugins/auth.plugin.ts`) verifies the bearer JWT, loads the user (cache-aside via Redis with `UserInformationCacheKey`), and injects `user: UserInformation` into the route context. Apply per-endpoint authorization in `beforeHandle`:

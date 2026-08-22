@@ -49,7 +49,7 @@ export const UserModule = new Elysia({
 					"Retrieve a paginated list of users. Soft-deleted users are excluded. " +
 					"Requires 'user list' permission. `search` matches name, email and " +
 					"status. Sortable and filterable fields are listed on the individual " +
-					"query parameters; `filter[role_id]` takes a role UUID and narrows to " +
+					"query parameters; `filter[roleId]` takes a role UUID and narrows to " +
 					"users holding that role. An unsupported `sort` is rejected with 422 " +
 					"and an unsupported `filter[<key>]` with 400.",
 			},

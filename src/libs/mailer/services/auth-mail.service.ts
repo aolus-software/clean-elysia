@@ -5,10 +5,15 @@ import { resetPasswordLifetime, verificationTokenLifetime } from "@default";
 import { getCurrentLocale, t } from "@i18n";
 import { ForgotPasswordRepository, UserRepository } from "@repositories";
 import { log, StrToolkit } from "@utils";
+import { NotFoundError } from "elysia";
 
 export class AuthMailService {
 	async sendVerificationEmail(userId: string, tx?: DbTransaction) {
 		const user = await UserRepository().getDetail(userId);
+		if (!user) {
+			throw new NotFoundError(t("user.notFound"));
+		}
+
 		const token = StrToolkit.random(100);
 		const lang = getCurrentLocale();
 
@@ -41,6 +46,10 @@ export class AuthMailService {
 
 	async sendResetPasswordEmail(userId: string) {
 		const user = await UserRepository().getDetail(userId);
+		if (!user) {
+			throw new NotFoundError(t("user.notFound"));
+		}
+
 		const token = StrToolkit.random(255);
 		const lang = getCurrentLocale();
 

@@ -33,10 +33,10 @@ import {
 	inArray,
 	isNull,
 	lte,
+	not,
 	or,
 	SQL,
 } from "drizzle-orm";
-import { NotFoundError } from "elysia";
 
 /* Keys are the API-facing sort names (camelCase, aligned with the shared
    defaultSort constant); values are the snake_case Drizzle columns they map
@@ -58,7 +58,7 @@ export const userFilterableFields: FilterField[] = [
 	{ field: "status", enum: Object.values(UserStatus) },
 	"name",
 	"email",
-	{ field: "role_id", kind: "id" },
+	{ field: "roleId", kind: "id" },
 	{ field: "createdAt", kind: "date" },
 	{ field: "updatedAt", kind: "date" },
 ];
@@ -68,7 +68,7 @@ export const userFilterableFields: FilterField[] = [
 export const userFilterExample: Record<string, string> = {
 	name: "jane",
 	email: "jane@example.com",
-	role_id: "550e8400-e29b-41d4-a716-446655440000",
+	roleId: "550e8400-e29b-41d4-a716-446655440000",
 	createdAt: "2024-01-01,2024-12-31",
 	updatedAt: "2024-01-01,2024-12-31",
 };
@@ -139,7 +139,7 @@ export const UserRepository = () => {
 					);
 				}
 
-				if (filter.role_id) {
+				if (filter.roleId) {
 					filterClauses.push(
 						exists(
 							database
@@ -150,7 +150,7 @@ export const UserRepository = () => {
 										eq(userRoles.user_id, users.id),
 										inArray(
 											userRoles.role_id,
-											DatatableToolkit.filterValues(filter.role_id),
+											DatatableToolkit.filterValues(filter.roleId),
 										),
 									),
 								),
@@ -254,22 +254,6 @@ export const UserRepository = () => {
 		): Promise<UserDetail> => {
 			const database = tx || dbInstance;
 
-			// validate is the email exist
-			const isEmailExist = await database
-				.select()
-				.from(users)
-				.where(and(eq(users.email, data.email), isNull(users.deleted_at)))
-				.limit(1);
-
-			if (isEmailExist.length > 0) {
-				throw new BadRequestError(t("user.emailExists"), [
-					{
-						field: "email",
-						message: t("user.emailExists"),
-					},
-				]);
-			}
-
 			const hashedPassword = await Hash.generateHash(data.password);
 			const user = await database
 				.insert(users)
@@ -359,10 +343,45 @@ export const UserRepository = () => {
 			};
 		},
 
+		findById: async (userId: string, tx?: DbTransaction) => {
+			const database = tx || dbInstance;
+
+			const user = await database.query.users.findFirst({
+				where: and(eq(users.id, userId), isNull(users.deleted_at)),
+			});
+
+			return user || null;
+		},
+
+		/* Uniqueness lookup for the service's create/update checks. Only live
+		   users count — a soft-deleted row's address is reusable, which is why the
+		   column carries no database-level unique constraint. `excludeId` is the
+		   record being updated, so saving it without changing the address does not
+		   collide with itself. */
+		findLiveByEmail: async (
+			email: string,
+			excludeId?: string,
+			tx?: DbTransaction,
+		) => {
+			const database = tx || dbInstance;
+
+			const user = await database.query.users.findFirst({
+				where: excludeId
+					? and(
+							eq(users.email, email),
+							isNull(users.deleted_at),
+							not(eq(users.id, excludeId)),
+						)
+					: and(eq(users.email, email), isNull(users.deleted_at)),
+			});
+
+			return user || null;
+		},
+
 		getDetail: async (
 			userId: string,
 			tx?: DbTransaction,
-		): Promise<UserDetail> => {
+		): Promise<UserDetail | null> => {
 			const database = tx || dbInstance;
 			const user = await database.query.users.findFirst({
 				where: and(eq(users.id, userId), isNull(users.deleted_at)),
@@ -397,7 +416,7 @@ export const UserRepository = () => {
 			});
 
 			if (!user) {
-				throw new NotFoundError(t("user.notFound"));
+				return null;
 			}
 
 			return {
@@ -421,23 +440,30 @@ export const UserRepository = () => {
 			tx?: DbTransaction,
 		): Promise<void> => {
 			const database = tx || dbInstance;
-			const user = await database.query.users.findFirst({
-				where: and(eq(users.id, userId), isNull(users.deleted_at)),
-			});
 
-			if (!user) {
-				throw new NotFoundError(t("user.notFound"));
+			/* Only the fields the caller actually supplied are written, so an
+			   omitted status or remark keeps whatever is stored. Reading the row
+			   first to echo its own values back was the previous approach and cost
+			   an extra query for the same result. */
+			const changes: Partial<{
+				name: string;
+				email: string;
+				status: UserStatusEnum;
+				remark: string | null;
+			}> = {
+				name: data.name,
+				email: data.email,
+			};
+
+			if (data.status) {
+				changes.status = data.status;
 			}
 
-			await database
-				.update(users)
-				.set({
-					name: data.name,
-					email: data.email,
-					status: data.status || user.status,
-					remark: data.remark || user.remark,
-				})
-				.where(eq(users.id, userId));
+			if (data.remark) {
+				changes.remark = data.remark;
+			}
+
+			await database.update(users).set(changes).where(eq(users.id, userId));
 
 			// remove all role or adding new role
 			if (data.role_ids && data.role_ids.length > 0) {
@@ -458,13 +484,6 @@ export const UserRepository = () => {
 
 		delete: async (userId: string, tx?: DbTransaction): Promise<void> => {
 			const database = tx || dbInstance;
-			const user = await database.query.users.findFirst({
-				where: and(eq(users.id, userId), isNull(users.deleted_at)),
-			});
-
-			if (!user) {
-				throw new NotFoundError(t("user.notFound"));
-			}
 
 			await database
 				.update(users)

@@ -1,7 +1,5 @@
 import { db, DbTransaction, permissions } from "@database";
 import { defaultSort } from "@default";
-import { UnprocessableEntityError } from "@errors";
-import { t } from "@i18n";
 import {
 	DatatableType,
 	FilterField,
@@ -13,7 +11,6 @@ import {
 } from "@types";
 import { DatatableToolkit } from "@utils";
 import { and, asc, desc, eq, gte, ilike, lte, not, or, SQL } from "drizzle-orm";
-import { NotFoundError } from "elysia";
 
 /* Keys are the API-facing sort names (camelCase, aligned with the shared
    defaultSort constant); values are the snake_case Drizzle columns they map
@@ -169,7 +166,7 @@ export const PermissionRepository = () => {
 		getDetail: async (
 			id: string,
 			tx?: DbTransaction,
-		): Promise<PermissionList> => {
+		): Promise<PermissionList | null> => {
 			const database = tx || dbInstance;
 			const permission = await database.query.permissions.findFirst({
 				where: and(eq(permissions.id, id)),
@@ -183,10 +180,58 @@ export const PermissionRepository = () => {
 			});
 
 			if (!permission) {
-				throw new NotFoundError(t("permission.notFound"));
+				return null;
 			}
 
 			return permission;
+		},
+
+		findById: async (id: string, tx?: DbTransaction) => {
+			const database = tx || dbInstance;
+
+			const permission = await database.query.permissions.findFirst({
+				where: eq(permissions.id, id),
+			});
+
+			return permission || null;
+		},
+
+		/* Uniqueness lookup for the service's update check. `excludeId` is the
+		   record being updated, so saving it without renaming does not collide
+		   with itself. */
+		findByName: async (
+			name: string,
+			excludeId?: string,
+			tx?: DbTransaction,
+		) => {
+			const database = tx || dbInstance;
+
+			const permission = await database.query.permissions.findFirst({
+				where: excludeId
+					? and(eq(permissions.name, name), not(eq(permissions.id, excludeId)))
+					: eq(permissions.name, name),
+			});
+
+			return permission || null;
+		},
+
+		/* Create takes a batch of names, so its uniqueness check needs every
+		   collision rather than the first — the service names them all in the
+		   error it throws. */
+		findExistingByNames: async (
+			names: string[],
+			tx?: DbTransaction,
+		): Promise<{ name: string }[]> => {
+			const database = tx || dbInstance;
+
+			if (names.length === 0) {
+				return [];
+			}
+
+			return await database.query.permissions.findMany({
+				where: or(...names.map((name) => ilike(permissions.name, name))),
+				columns: { name: true },
+			});
 		},
 
 		create: async (
@@ -194,26 +239,6 @@ export const PermissionRepository = () => {
 			tx?: DbTransaction,
 		): Promise<void> => {
 			const database = tx || dbInstance;
-			const permissionNames: string[] = data.name.map(
-				(name) => `${data.group} ${name}`,
-			);
-
-			const existingPermissions = await database.query.permissions.findMany({
-				where: or(
-					...permissionNames.map((name) => ilike(permissions.name, name)),
-				),
-			});
-
-			if (existingPermissions.length > 0) {
-				throw new UnprocessableEntityError(t("permission.someExists"), [
-					{
-						field: "name",
-						message: t("permission.someExistsList", {
-							names: existingPermissions.map((perm) => perm.name).join(", "),
-						}),
-					},
-				]);
-			}
 
 			const insertedData = data.name.map((name) => ({
 				name: `${data.group} ${name}`,
@@ -229,30 +254,6 @@ export const PermissionRepository = () => {
 			tx?: DbTransaction,
 		): Promise<void> => {
 			const database = tx || dbInstance;
-			const permission = await database.query.permissions.findFirst({
-				where: eq(permissions.id, id),
-			});
-
-			if (!permission) {
-				throw new NotFoundError(t("permission.notFound"));
-			}
-
-			const isPermissionNameAlreadyExist = await database
-				.select()
-				.from(permissions)
-				.where(
-					and(eq(permissions.name, data.name), not(eq(permissions.id, id))),
-				)
-				.limit(1);
-
-			if (isPermissionNameAlreadyExist.length > 0) {
-				throw new UnprocessableEntityError(t("permission.nameExists"), [
-					{
-						field: "name",
-						message: t("permission.nameExists"),
-					},
-				]);
-			}
 
 			await database
 				.update(permissions)
@@ -265,13 +266,6 @@ export const PermissionRepository = () => {
 
 		delete: async (id: string, tx?: DbTransaction): Promise<void> => {
 			const database = tx || dbInstance;
-			const permission = await database.query.permissions.findFirst({
-				where: eq(permissions.id, id),
-			});
-
-			if (!permission) {
-				throw new NotFoundError(t("permission.notFound"));
-			}
 
 			await database.delete(permissions).where(eq(permissions.id, id));
 		},

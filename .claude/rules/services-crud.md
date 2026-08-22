@@ -14,10 +14,13 @@ delete:  (id: string) => Promise<void>
 `src/modules/settings/role/service.ts` is the reference. Every method has an explicit parameter type;
 `findAll` has an explicit return type.
 
-## Where the checks live — read this before writing a new module
+## Where the checks live — the service owns them
 
-In **this** repo the repository owns the existence and uniqueness checks, and the CRUD service is a
-thin pass-through:
+**The repository queries; the service decides.** Fetch, check, then act:
+
+- existence → `NotFoundError`
+- uniqueness → `UnprocessableEntityError` (for `user`, `BadRequestError` — see below)
+- anything else that needs database state → the service
 
 ```ts
 export const RoleService = {
@@ -28,36 +31,71 @@ export const RoleService = {
 	},
 
 	findOne: async (id: string) => {
-		return await RoleRepository().getDetail(id);
+		const role = await RoleRepository().getDetail(id);
+		if (!role) {
+			throw new NotFoundError(t("role.notFound"));
+		}
+
+		return role;
 	},
 
 	update: async (id: string, data: { name: string; permission_ids: string[] }) => {
-		return await RoleRepository().update(id, data);
+		const role = await RoleRepository().findById(id);
+		if (!role) {
+			throw new NotFoundError(t("role.notFound"));
+		}
+
+		const existing = await RoleRepository().findByName(data.name, id);
+		if (existing) {
+			throw new UnprocessableEntityError(t("role.nameExists"), [
+				{ field: "name", message: t("role.nameExistsFor", { name: data.name }) },
+			]);
+		}
+
+		return await db.transaction(async (tx) => {
+			return await RoleRepository().update(id, data, tx);
+		});
 	},
 };
 ```
 
-`RoleRepository().getDetail` throws `NotFoundError` when the row is missing; `create` and `update`
-throw `UnprocessableEntityError` on a duplicate name. The service adds nothing.
+The repository's read methods return `null` for a miss — `getDetail`, `findById`, `findByName`,
+`findLiveByEmail` — precisely so the service can decide the status. The repository has no opinion on
+whether an operation should be allowed; it only validates the datatable inputs (sort field, sort
+direction, filter keys) and throws `BadRequestError` for those.
 
-**This is a known inconsistency.** It sits awkwardly with [repositories.md](./repositories.md), which
-says a repository throws `NotFoundError` for a genuinely missing row and leaves *everything else* to
-the service — uniqueness is a business rule, and it is currently enforced in the repository. Both
-sibling repos (`clean-elysia-prisma`, `clean-nest-drizzle-pg`) do it the other way round: the service
-fetches, checks, and throws, and the repository only queries.
+Four rules follow, and each one has bitten this codebase:
 
-Until that is settled deliberately:
-
-- **Follow the module you are editing.** Do not half-migrate one module to the other pattern.
 - **Never split a check across both layers.** Two existence checks for one operation means two
   queries and two places to forget one.
-- **The repository's throw messages are catalog keys.** Because the throw lives there, so does the
-  user-facing string: `t("role.notFound")`, not `"Role not found"`. See
-  [repositories.md](./repositories.md) and rule 6 of [i18n.md](./i18n.md). If the checks ever move
-  up into the services, the `t()` calls move with them.
-- For a genuinely new module, prefer the sibling pattern — checks in the service — and say so in the
-  PR, because it is the direction the rest of the workspace leans. Raise it rather than quietly
-  diverging; that is [contradiction-halt.md](./contradiction-halt.md).
+- **`update` passes the record's own id as `excludeId`.** `findByName(data.name, id)` — without it,
+  saving a record without renaming it rejects itself.
+- **The throw owns its message.** The `t()` key lives wherever the throw lives, which is now the
+  service. See rule 6 of [i18n.md](./i18n.md).
+- **A multi-table write is a transaction, opened here.** `roles` + `role_permissions`,
+  `users` + `user_roles`. The repository accepts `tx`; it never opens one.
+
+**The uniqueness status code is not uniform, and that is not yet settled.** `role` and `permission`
+throw `UnprocessableEntityError` (422); `user` throws `BadRequestError` (400) for a duplicate email.
+The sibling `clean-elysia-prisma` uses 400 everywhere. Preserve whichever one the module you are
+editing already uses — changing it is a public API change and belongs in its own decision, not a
+drive-by. Raise it rather than aligning it silently; that is
+[contradiction-halt.md](./contradiction-halt.md).
+
+## What still throws from a repository
+
+Two throws in `user.repository.ts` stay, and they are **not** business rules — they are the
+repository asserting that its own write behaved:
+
+```ts
+if (user.length === 0) {
+	throw new BadRequestError(t("user.createFailed"), [ ... ]);
+}
+```
+
+An `INSERT ... RETURNING` that comes back empty is a condition only the repository can observe, so
+no service-side check could replace it. Everything a service *can* check, it does. Do not read these
+two as licence to move an existence or uniqueness check back down.
 
 ## findAll
 
@@ -77,12 +115,17 @@ The handler has already run `DatatableToolkit.parseFilter(query, request.url)`, 
 
 ## findOne
 
-Returns the detail shape. Whichever layer owns the check, a missing row raises `NotFoundError` and
-never resolves to `null` reaching the handler — the handler has no null branch.
+Returns the detail shape. `getDetail` resolves to `null` for a miss; the service turns that into
+`NotFoundError` so `null` never reaches the handler — the handler has no null branch.
 
 ```ts
 findOne: async (id: string) => {
-	return await UserRepository().getDetail(id);
+	const user = await UserRepository().getDetail(id);
+	if (!user) {
+		throw new NotFoundError(t("user.notFound"));
+	}
+
+	return user;
 },
 ```
 
@@ -100,9 +143,20 @@ create: async (data: {
 	remarks?: string;
 	role_ids: string[];
 }) => {
+	const existing = await UserRepository().findLiveByEmail(data.email);
+	if (existing) {
+		throw new BadRequestError(t("user.emailExists"), [
+			{ field: "email", message: t("user.emailExists") },
+		]);
+	}
+
 	await UserRepository().create(data);
 },
 ```
+
+Uniqueness is checked here, before the write. Note `findLiveByEmail` filters `deleted_at` — a
+soft-deleted user's address is reusable, which is why the column carries no database-level unique
+constraint and this check is the only thing enforcing it among live users.
 
 The input type is written out explicitly rather than reusing the TypeBox schema's inferred type —
 that is the existing convention. When the write touches more than one table (user + roles, user +
@@ -123,9 +177,24 @@ update: async (
 		role_ids: string[];
 	},
 ) => {
+	const user = await UserRepository().findById(id);
+	if (!user) {
+		throw new NotFoundError(t("user.notFound"));
+	}
+
+	const existing = await UserRepository().findLiveByEmail(data.email, id);
+	if (existing) {
+		throw new BadRequestError(t("user.emailExists"), [
+			{ field: "email", message: t("user.emailExists") },
+		]);
+	}
+
 	return await UserRepository().update(id, data);
 },
 ```
+
+The second argument to `findLiveByEmail` excludes this record, so saving a user without changing
+their address does not collide with itself.
 
 `password` is deliberately absent from the update input — password changes go through the dedicated
 `resetPassword` method, so a general update can never silently rewrite a credential.
@@ -138,6 +207,11 @@ on `isNull(<table>.deleted_at)` — so "delete" is an `update` that stamps the t
 
 ```ts
 delete: async (id: string) => {
+	const user = await UserRepository().findById(id);
+	if (!user) {
+		throw new NotFoundError(t("user.notFound"));
+	}
+
 	return await UserRepository().delete(id);
 },
 ```
@@ -149,7 +223,7 @@ logic tends to appear — transactions, hashing, mail:
 
 ```ts
 resetPassword: async (id: string, newPassword: string) => {
-	const user = await UserRepository().getDetail(id);
+	const user = await UserService.findOne(id);
 	const hashPassword = await Hash.generateHash(newPassword);
 
 	await db.transaction(async (tx) => {
@@ -158,33 +232,40 @@ resetPassword: async (id: string, newPassword: string) => {
 },
 
 sendEmailVerification: async (id: string) => {
-	const user = await UserRepository().getDetail(id);
+	const user = await UserService.findOne(id);
 	const authMailService = new AuthMailService();
 	await authMailService.sendVerificationEmail(user.id);
 },
 ```
 
-Note `getDetail` is called first purely to make the operation 404 on a bad id before doing work.
+These call the service's own `findOne` rather than the repository, so the 404 on a bad id comes from
+one place. Reaching for `UserRepository().getDetail` here would get `null` and no error.
 
 ## Imports
 
 ```ts
 import { db, users, UserStatusEnum } from "@database";
+import { BadRequestError } from "@errors";
+import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { UserRepository } from "@repositories";
 import { DatatableType, PaginationResponse, UserList } from "@types";
 import { Hash } from "@utils";
 import { eq } from "drizzle-orm";
+import { NotFoundError } from "elysia";
 ```
 
-Import only what the service actually uses. Errors come from `@errors`; `NotFoundError` is imported
-from `elysia` in the repositories, so match whichever layer you are editing.
+Import only what the service actually uses. `BadRequestError` and `UnprocessableEntityError` come
+from `@errors`; **`NotFoundError` comes from `elysia`**, not from `@errors` — both are caught by
+`ErrorHandlerPlugin`, but the repositories and services here use the `elysia` one. Every service that
+throws also imports `t` from `@i18n`, because the message belongs to the throw.
 
 ## Checklist
 
 - [ ] Five methods named `findAll` / `findOne` / `create` / `update` / `delete`.
 - [ ] Explicit types on every parameter; `findAll` returns `Promise<PaginationResponse<XList>>`.
-- [ ] Existence and uniqueness checks live in exactly one layer, matching the module's existing style.
+- [ ] Existence and uniqueness checks live in the **service**, never the repository.
+- [ ] `update` passes the record's own id to the uniqueness lookup as `excludeId`.
 - [ ] Hashing and derived fields computed in the service, not the repository.
 - [ ] Multi-table writes wrapped in `db.transaction` with `tx` threaded through.
 - [ ] `delete` soft-deletes.

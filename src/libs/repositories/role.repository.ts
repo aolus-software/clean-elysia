@@ -1,7 +1,5 @@
 import { db, DbTransaction, rolePermissions, roles } from "@database";
 import { defaultSort } from "@default";
-import { UnprocessableEntityError } from "@errors";
-import { t } from "@i18n";
 import {
 	DatatableType,
 	FilterField,
@@ -24,7 +22,6 @@ import {
 	or,
 	SQL,
 } from "drizzle-orm";
-import { NotFoundError } from "elysia";
 
 /* Keys are the API-facing sort names (camelCase, aligned with the shared
    defaultSort constant); values are the snake_case Drizzle columns they map
@@ -157,6 +154,35 @@ export const RoleRepository = () => {
 			};
 		},
 
+		findById: async (id: string, tx?: DbTransaction) => {
+			const database = tx || dbInstance;
+
+			const role = await database.query.roles.findFirst({
+				where: eq(roles.id, id),
+			});
+
+			return role || null;
+		},
+
+		/* Uniqueness lookup for the service's create/update checks. `excludeId`
+		   is the record being updated, so saving a role without renaming it does
+		   not collide with itself. */
+		findByName: async (
+			name: string,
+			excludeId?: string,
+			tx?: DbTransaction,
+		) => {
+			const database = tx || dbInstance;
+
+			const role = await database.query.roles.findFirst({
+				where: excludeId
+					? and(eq(roles.name, name), not(eq(roles.id, excludeId)))
+					: eq(roles.name, name),
+			});
+
+			return role || null;
+		},
+
 		create: async (
 			data: {
 				name: string;
@@ -165,19 +191,6 @@ export const RoleRepository = () => {
 			tx?: DbTransaction,
 		): Promise<void> => {
 			const database = tx || dbInstance;
-
-			const isNameExists = await database.query.roles.findFirst({
-				where: eq(roles.name, data.name),
-			});
-
-			if (isNameExists) {
-				throw new UnprocessableEntityError(t("role.nameExists"), [
-					{
-						field: "name",
-						message: t("role.nameExistsFor", { name: data.name }),
-					},
-				]);
-			}
 
 			const role = await database
 				.insert(roles)
@@ -193,7 +206,7 @@ export const RoleRepository = () => {
 					permission_id: permissionId,
 				}));
 
-				await dbInstance.insert(rolePermissions).values(rolePermissionsData);
+				await database.insert(rolePermissions).values(rolePermissionsData);
 			}
 		},
 
@@ -225,7 +238,7 @@ export const RoleRepository = () => {
 			});
 
 			if (!role) {
-				throw new NotFoundError(t("role.notFound"));
+				return null;
 			}
 
 			const allPermissions = await database.query.permissions.findMany({
@@ -281,27 +294,6 @@ export const RoleRepository = () => {
 		): Promise<void> => {
 			const database = tx || dbInstance;
 
-			const role = await database.query.roles.findFirst({
-				where: eq(roles.id, id),
-			});
-
-			if (!role) {
-				throw new NotFoundError(t("role.notFound"));
-			}
-
-			const isNameExists = await database.query.roles.findFirst({
-				where: and(eq(roles.name, data.name), not(eq(roles.id, id))),
-			});
-
-			if (isNameExists) {
-				throw new UnprocessableEntityError(t("role.nameExists"), [
-					{
-						field: "name",
-						message: t("role.nameExistsFor", { name: data.name }),
-					},
-				]);
-			}
-
 			await database
 				.update(roles)
 				.set({
@@ -327,14 +319,6 @@ export const RoleRepository = () => {
 
 		delete: async (id: string, tx?: DbTransaction): Promise<void> => {
 			const database = tx || dbInstance;
-
-			const role = await database.query.roles.findFirst({
-				where: eq(roles.id, id),
-			});
-
-			if (!role) {
-				throw new NotFoundError(t("role.notFound"));
-			}
 
 			await database
 				.delete(rolePermissions)
