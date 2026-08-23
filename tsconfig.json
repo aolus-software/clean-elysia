@@ -117,8 +117,7 @@
 			"@repositories": ["./src/libs/repositories", "./src/libs/repositories/*"],
 			"@types": ["./src/libs/types", "./src/libs/types/*"],
 			"@utils": ["./src/libs/utils", "./src/libs/utils/*"],
-			"@modules": ["./src/modules", "./src/modules/*"],
-			"@prisma-generated": ["./prisma/generated/client", "./prisma/generated/*"]
+			"@modules": ["./src/modules", "./src/modules/*"]
 		}
 	},
 	"exclude": ["node_modules", "dist", "server", ".agents", ".claude"]

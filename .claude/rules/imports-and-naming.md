@@ -26,11 +26,6 @@ The full list:
 | `@utils`            | `src/libs/utils/`        |
 | `@modules`          | `src/modules/`           |
 
-`tsconfig.json` also carries a `@prisma-generated` entry pointing at `prisma/generated/client`.
-**That directory does not exist in this repo** — this project uses Drizzle. The alias is a leftover
-from the Prisma sibling template. Don't import through it; don't add code that would make it real
-without raising it first (see [contradiction-halt.md](./contradiction-halt.md)).
-
 Rules:
 
 - **Always use the alias for anything outside the current folder.** Never `../../libs/...`.
