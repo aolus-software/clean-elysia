@@ -1,4 +1,5 @@
 import { RoleGuard } from "@guards";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import { ResponseToolkit } from "@utils";
 import Elysia from "elysia";
@@ -19,7 +20,7 @@ export const SelectOptionModule = new Elysia({
 			const permissions = await SelectOptionService.permissionSelect();
 			return ResponseToolkit.success(
 				permissions,
-				"Permission select options retrieved successfully",
+				trans("selectOption.permissionsSuccess"),
 				200,
 			);
 		},
@@ -39,7 +40,7 @@ export const SelectOptionModule = new Elysia({
 			const roles = await SelectOptionService.roleSelect();
 			return ResponseToolkit.success(
 				roles,
-				"Role select options retrieved successfully",
+				trans("selectOption.rolesSuccess"),
 				200,
 			);
 		},

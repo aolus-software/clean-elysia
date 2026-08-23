@@ -50,7 +50,7 @@ export const UserCreateSchema = t.Object({
 	remark: t.Nullable(
 		t.String({ maxLength: 255, description: "Optional remarks" }),
 	),
-	role_ids: t.Array(t.String({ format: "uuid" }), {
+	roleIds: t.Array(t.String({ format: "uuid" }), {
 		description: "Array of role UUIDs to assign",
 	}),
 });
@@ -86,7 +86,7 @@ export const UserUpdateSchema = t.Object({
 	remark: t.Nullable(
 		t.String({ maxLength: 255, description: "Optional remarks" }),
 	),
-	role_ids: t.Array(t.String({ format: "uuid" }), {
+	roleIds: t.Array(t.String({ format: "uuid" }), {
 		description: "Array of role UUIDs to assign",
 	}),
 });

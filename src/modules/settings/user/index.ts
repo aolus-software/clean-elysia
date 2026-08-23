@@ -1,4 +1,5 @@
 import { PermissionGuard, RoleGuard } from "@guards";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import {
 	commonPaginatedResponse,
@@ -32,11 +33,7 @@ export const UserModule = new Elysia({
 			const queryParam = DatatableToolkit.parseFilter(query, request.url);
 			const result = await UserService.findAll(queryParam);
 
-			return ResponseToolkit.success(
-				result,
-				"User list retrieved successfully",
-				200,
-			);
+			return ResponseToolkit.success(result, trans("user.listSuccess"), 200);
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -62,7 +59,7 @@ export const UserModule = new Elysia({
 		"",
 		async ({ body }) => {
 			await UserService.create(body);
-			return ResponseToolkit.success(null, "User created successfully", 201);
+			return ResponseToolkit.success(null, trans("user.createSuccess"), 201);
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -75,7 +72,7 @@ export const UserModule = new Elysia({
 					"Create a new user with the provided details. Requires 'user create' permission.",
 			},
 			response: commonResponse(t.Null(), {
-				include: [201, 400, 401, 403, 500],
+				include: [201, 400, 401, 403, 422, 500],
 			}),
 		},
 	)
@@ -83,11 +80,7 @@ export const UserModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			const user = await UserService.findOne(params.id);
-			return ResponseToolkit.success(
-				user,
-				"User details retrieved successfully",
-				200,
-			);
+			return ResponseToolkit.success(user, trans("user.detailSuccess"), 200);
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -107,7 +100,7 @@ export const UserModule = new Elysia({
 		"/:id",
 		async ({ params, body }) => {
 			await UserService.update(params.id, body);
-			return ResponseToolkit.success(null, "User updated successfully", 200);
+			return ResponseToolkit.success(null, trans("user.updateSuccess"), 200);
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -120,7 +113,7 @@ export const UserModule = new Elysia({
 					"Update the details of an existing user by ID. Requires 'user edit' permission.",
 			},
 			response: commonResponse(t.Null(), {
-				include: [200, 400, 401, 403, 404, 500],
+				include: [200, 400, 401, 403, 404, 422, 500],
 			}),
 		},
 	)
@@ -130,7 +123,7 @@ export const UserModule = new Elysia({
 			await UserService.resetPassword(params.id, body.newPassword);
 			return ResponseToolkit.success(
 				null,
-				"User password reset successfully",
+				trans("user.passwordResetSuccess"),
 				200,
 			);
 		},
@@ -155,7 +148,7 @@ export const UserModule = new Elysia({
 			await UserService.sendEmailVerification(params.id);
 			return ResponseToolkit.success(
 				null,
-				"Verification email sent successfully",
+				trans("user.verificationEmailSent"),
 				200,
 			);
 		},
@@ -179,7 +172,7 @@ export const UserModule = new Elysia({
 			await UserService.sendResetPasswordEmail(params.id);
 			return ResponseToolkit.success(
 				null,
-				"Reset password email sent successfully",
+				trans("user.passwordResetEmailSent"),
 				200,
 			);
 		},
@@ -201,7 +194,7 @@ export const UserModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			await UserService.delete(params.id);
-			return ResponseToolkit.success(null, "User deleted successfully", 200);
+			return ResponseToolkit.success(null, trans("user.deleteSuccess"), 200);
 		},
 		{
 			beforeHandle: ({ user }) => {

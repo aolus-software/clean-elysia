@@ -19,7 +19,7 @@ delete:  (id: string) => Promise<void>
 **The repository queries; the service decides.** Fetch, check, then act:
 
 - existence → `NotFoundError`
-- uniqueness → `UnprocessableEntityError` (for `user`, `BadRequestError` — see below)
+- uniqueness → `UnprocessableEntityError`
 - anything else that needs database state → the service
 
 ```ts
@@ -39,7 +39,7 @@ export const RoleService = {
 		return role;
 	},
 
-	update: async (id: string, data: { name: string; permission_ids: string[] }) => {
+	update: async (id: string, data: { name: string; permissionIds: string[] }) => {
 		const role = await RoleRepository().findById(id);
 		if (!role) {
 			throw new NotFoundError(t("role.notFound"));
@@ -75,12 +75,16 @@ Four rules follow, and each one has bitten this codebase:
 - **A multi-table write is a transaction, opened here.** `roles` + `role_permissions`,
   `users` + `user_roles`. The repository accepts `tx`; it never opens one.
 
-**The uniqueness status code is not uniform, and that is not yet settled.** `role` and `permission`
-throw `UnprocessableEntityError` (422); `user` throws `BadRequestError` (400) for a duplicate email.
-The sibling `clean-elysia-prisma` uses 400 everywhere. Preserve whichever one the module you are
-editing already uses — changing it is a public API change and belongs in its own decision, not a
-drive-by. Raise it rather than aligning it silently; that is
-[contradiction-halt.md](./contradiction-halt.md).
+**A uniqueness conflict is 422 everywhere — settled 2026-08-23.** `role`, `permission` and `user` all
+throw `UnprocessableEntityError`, and so does the sibling `clean-elysia-prisma`. The semantics decided
+it: the request is well-formed and fails a business rule, which is what 422 means. `user` previously
+threw `BadRequestError` (400) for a duplicate email; that was a divergence, not a variant, and it is
+gone. A new uniqueness check that reaches for 400 — or for 409, which no error class in this repo can
+produce — is wrong.
+
+Note what 422 does **not** cover: `BadRequestError` (400) is still correct for a malformed request the
+schema could not reject, and for the repository's datatable guards (unknown sort field, unknown filter
+key). Those are bad *input*, not a failed business rule.
 
 ## What still throws from a repository
 
@@ -141,7 +145,7 @@ create: async (data: {
 	password: string;
 	status: UserStatusEnum;
 	remarks?: string;
-	role_ids: string[];
+	roleIds: string[];
 }) => {
 	const existing = await UserRepository().findLiveByEmail(data.email);
 	if (existing) {
@@ -174,7 +178,7 @@ update: async (
 		email: string;
 		status: UserStatusEnum;
 		remarks?: string;
-		role_ids: string[];
+		roleIds: string[];
 	},
 ) => {
 	const user = await UserRepository().findById(id);

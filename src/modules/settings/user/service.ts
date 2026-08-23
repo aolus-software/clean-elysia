@@ -1,5 +1,5 @@
 import { db, users, UserStatusEnum } from "@database";
-import { BadRequestError } from "@errors";
+import { UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { UserRepository } from "@repositories";
@@ -21,11 +21,11 @@ export const UserService = {
 		password: string;
 		status: UserStatusEnum;
 		remarks?: string;
-		role_ids: string[];
+		roleIds: string[];
 	}) => {
 		const existing = await UserRepository().findLiveByEmail(data.email);
 		if (existing) {
-			throw new BadRequestError(t("user.emailExists"), [
+			throw new UnprocessableEntityError(t("user.emailExists"), [
 				{
 					field: "email",
 					message: t("user.emailExists"),
@@ -52,7 +52,7 @@ export const UserService = {
 			email: string;
 			status: UserStatusEnum;
 			remarks?: string;
-			role_ids: string[];
+			roleIds: string[];
 		},
 	) => {
 		const user = await UserRepository().findById(id);
@@ -62,7 +62,7 @@ export const UserService = {
 
 		const existing = await UserRepository().findLiveByEmail(data.email, id);
 		if (existing) {
-			throw new BadRequestError(t("user.emailExists"), [
+			throw new UnprocessableEntityError(t("user.emailExists"), [
 				{
 					field: "email",
 					message: t("user.emailExists"),

@@ -266,13 +266,13 @@ export const UserRepository = () => {
 				})
 				.returning();
 
-			if (data.role_ids && data.role_ids.length > 0) {
+			if (data.roleIds && data.roleIds.length > 0) {
 				if (user.length > 0) {
 					const userId = user[0].id;
 					const userRolesData: {
 						user_id: string;
 						role_id: string;
-					}[] = data.role_ids.map((role_id) => ({
+					}[] = data.roleIds.map((role_id) => ({
 						user_id: userId,
 						role_id: role_id,
 					}));
@@ -466,13 +466,13 @@ export const UserRepository = () => {
 			await database.update(users).set(changes).where(eq(users.id, userId));
 
 			// remove all role or adding new role
-			if (data.role_ids && data.role_ids.length > 0) {
+			if (data.roleIds && data.roleIds.length > 0) {
 				await database.delete(userRoles).where(eq(userRoles.user_id, userId));
 
 				const userRolesData: {
 					user_id: string;
 					role_id: string;
-				}[] = data.role_ids.map((role_id) => ({
+				}[] = data.roleIds.map((role_id) => ({
 					user_id: userId,
 					role_id,
 				}));

@@ -1,4 +1,5 @@
 import { PermissionGuard } from "@guards";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import {
 	commonPaginatedResponse,
@@ -30,11 +31,7 @@ export const RoleModule = new Elysia({
 			const queryParam = DatatableToolkit.parseFilter(query, request.url);
 			const result = await RoleService.findAll(queryParam);
 
-			return ResponseToolkit.success(
-				result,
-				"Role list retrieved successfully",
-				200,
-			);
+			return ResponseToolkit.success(result, trans("role.listSuccess"), 200);
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -58,7 +55,7 @@ export const RoleModule = new Elysia({
 		"",
 		async ({ body }) => {
 			await RoleService.create(body);
-			return ResponseToolkit.success(null, "Role created successfully", 201);
+			return ResponseToolkit.success(null, trans("role.createSuccess"), 201);
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -71,7 +68,7 @@ export const RoleModule = new Elysia({
 					"Create a new role with the provided details. Requires 'role create' permission.",
 			},
 			response: commonResponse(t.Null(), {
-				include: [201, 400, 401, 403, 500],
+				include: [201, 400, 401, 403, 422, 500],
 			}),
 		},
 	)
@@ -79,11 +76,7 @@ export const RoleModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			const result = await RoleService.findOne(params.id);
-			return ResponseToolkit.success(
-				result,
-				"Role detail retrieved successfully",
-				200,
-			);
+			return ResponseToolkit.success(result, trans("role.detailSuccess"), 200);
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -103,7 +96,7 @@ export const RoleModule = new Elysia({
 		"/:id",
 		async ({ params, body }) => {
 			await RoleService.update(params.id, body);
-			return ResponseToolkit.success(null, "Role updated successfully", 200);
+			return ResponseToolkit.success(null, trans("role.updateSuccess"), 200);
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -116,7 +109,7 @@ export const RoleModule = new Elysia({
 					"Update the details of an existing role. Requires 'role edit' permission.",
 			},
 			response: commonResponse(t.Null(), {
-				include: [200, 400, 401, 403, 404, 500],
+				include: [200, 400, 401, 403, 404, 422, 500],
 			}),
 		},
 	)
@@ -124,7 +117,7 @@ export const RoleModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			await RoleService.delete(params.id);
-			return ResponseToolkit.success(null, "Role deleted successfully", 200);
+			return ResponseToolkit.success(null, trans("role.deleteSuccess"), 200);
 		},
 		{
 			beforeHandle: ({ user }) => {

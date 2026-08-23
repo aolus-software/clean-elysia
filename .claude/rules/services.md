@@ -13,7 +13,7 @@ export const RoleService = {
 		return await RoleRepository().findAll(queryParam);
 	},
 
-	create: async (data: { name: string; permission_ids: string[] }) => {
+	create: async (data: { name: string; permissionIds: string[] }) => {
 		return await RoleRepository().create(data);
 	},
 };

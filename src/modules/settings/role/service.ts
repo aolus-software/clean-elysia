@@ -12,7 +12,7 @@ export const RoleService = {
 		return await RoleRepository().findAll(queryParam);
 	},
 
-	create: async (data: { name: string; permission_ids: string[] }) => {
+	create: async (data: { name: string; permissionIds: string[] }) => {
 		const existing = await RoleRepository().findByName(data.name);
 		if (existing) {
 			throw new UnprocessableEntityError(t("role.nameExists"), [
@@ -41,7 +41,7 @@ export const RoleService = {
 
 	update: async (
 		id: string,
-		data: { name: string; permission_ids: string[] },
+		data: { name: string; permissionIds: string[] },
 	) => {
 		const role = await RoleRepository().findById(id);
 		if (!role) {

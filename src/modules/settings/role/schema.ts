@@ -18,7 +18,7 @@ export const CreateRoleSchema = t.Object({
 		description: "Role name",
 		examples: ["editor"],
 	}),
-	permission_ids: t.Array(t.String({ format: "uuid" }), {
+	permissionIds: t.Array(t.String({ format: "uuid" }), {
 		description: "Array of permission UUIDs to assign",
 	}),
 });
@@ -28,7 +28,7 @@ export const UpdateRoleSchema = t.Object({
 		description: "Role name",
 		examples: ["editor"],
 	}),
-	permission_ids: t.Array(t.String({ format: "uuid" }), {
+	permissionIds: t.Array(t.String({ format: "uuid" }), {
 		description: "Array of permission UUIDs to assign",
 	}),
 });

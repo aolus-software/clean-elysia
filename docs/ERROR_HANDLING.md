@@ -113,7 +113,9 @@ throw new NotFoundError("User not found");
 
 #### UnprocessableEntityError (422)
 
-Validation failed on input data.
+Input is well-formed but fails a business rule. This is the status for a **uniqueness conflict** —
+a duplicate role name, permission name, or email address — carrying a `[{ field, message }]` array so
+the client can render the error inline. It is never 400 and never 409.
 
 ```typescript
 import { UnprocessableEntityError } from "@errors";

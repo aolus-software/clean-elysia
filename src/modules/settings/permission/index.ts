@@ -1,4 +1,5 @@
 import { PermissionGuard } from "@guards";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import {
 	commonPaginatedResponse,
@@ -32,7 +33,7 @@ export const PermissionModule = new Elysia({
 
 			return ResponseToolkit.success(
 				result,
-				"Permission list retrieved successfully",
+				trans("permission.listSuccess"),
 				200,
 			);
 		},
@@ -63,7 +64,7 @@ export const PermissionModule = new Elysia({
 
 			return ResponseToolkit.success(
 				null,
-				"Permission created successfully",
+				trans("permission.createSuccess"),
 				201,
 			);
 		},
@@ -89,7 +90,7 @@ export const PermissionModule = new Elysia({
 			const result = await PermissionService.detail(params.id);
 			return ResponseToolkit.success(
 				result,
-				"Permission detail retrieved successfully",
+				trans("permission.detailSuccess"),
 				200,
 			);
 		},
@@ -117,7 +118,7 @@ export const PermissionModule = new Elysia({
 			await PermissionService.update(params.id, body);
 			return ResponseToolkit.success(
 				null,
-				"Permission updated successfully",
+				trans("permission.updateSuccess"),
 				200,
 			);
 		},
@@ -146,7 +147,7 @@ export const PermissionModule = new Elysia({
 			await PermissionService.delete(params.id);
 			return ResponseToolkit.success(
 				null,
-				"Permission deleted successfully",
+				trans("permission.deleteSuccess"),
 				200,
 			);
 		},

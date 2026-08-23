@@ -62,16 +62,22 @@ Ordered outside-in, the way a request travels.
 
 ## Known tensions between these rules
 
-Recorded deliberately rather than resolved by fiat, because resolving it is a code change. Raise it
-rather than picking a side silently — [contradiction-halt.md](./contradiction-halt.md).
+None open. Both are recorded below rather than deleted, because the reasoning is what stops each one
+being reopened as a drive-by. A *new* tension is raised rather than resolved silently —
+[contradiction-halt.md](./contradiction-halt.md).
 
-- **The status code for a uniqueness conflict is not uniform.** `role` and `permission` throw
-  `UnprocessableEntityError` (422); `user` throws `BadRequestError` (400) for a duplicate email. The
-  sibling `clean-elysia-prisma` uses 400 for all three. Both are defensible, and the `include` arrays
-  on the affected routes already match whichever one each module throws — so aligning them is a
-  public API change plus an OpenAPI change, not a cleanup. Preserve the module's existing class;
-  raise the question rather than deciding it in passing. See
-  [services-crud.md](./services-crud.md).
+### Resolved: the status code for a uniqueness conflict
+
+**422 everywhere — settled 2026-08-23.** `role` and `permission` already threw
+`UnprocessableEntityError`; `user` threw `BadRequestError` (400) for a duplicate email, and the
+sibling `clean-elysia-prisma` used 400 for all three. All four modules across both repos now throw
+422, and the `include` arrays moved with them.
+
+The deciding argument was semantic rather than a majority: a duplicate email is a well-formed request
+that fails a business rule, which is exactly what 422 means, and it is the reading the Nest pair
+already codified. This was a **breaking** change for clients reading create/update errors, made
+deliberately in one release alongside the `roleIds` / `permissionIds` rename. See
+[services-crud.md](./services-crud.md).
 
 ### Resolved: where CRUD checks live
 
