@@ -11,6 +11,7 @@ import Elysia, { t } from "elysia";
 
 import {
 	CreateRoleSchema,
+	RoleDetailSchema,
 	RoleListSchema,
 	RoleQuerySchema,
 	UpdateRoleSchema,
@@ -53,8 +54,9 @@ export const RoleModule = new Elysia({
 	)
 	.post(
 		"",
-		async ({ body }) => {
+		async ({ body, set }) => {
 			await RoleService.create(body);
+			set.status = 201;
 			return ResponseToolkit.success(null, trans("role.createSuccess"), 201);
 		},
 		{
@@ -79,6 +81,7 @@ export const RoleModule = new Elysia({
 			return ResponseToolkit.success(result, trans("role.detailSuccess"), 200);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["role detail"]);
 			},
@@ -87,7 +90,7 @@ export const RoleModule = new Elysia({
 				description:
 					"Retrieve detailed information about a specific role. Requires 'role detail' permission.",
 			},
-			response: commonResponse(RoleListSchema, {
+			response: commonResponse(RoleDetailSchema, {
 				include: [200, 400, 401, 403, 404, 500],
 			}),
 		},
@@ -99,6 +102,7 @@ export const RoleModule = new Elysia({
 			return ResponseToolkit.success(null, trans("role.updateSuccess"), 200);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["role edit"]);
 			},
@@ -120,6 +124,7 @@ export const RoleModule = new Elysia({
 			return ResponseToolkit.success(null, trans("role.deleteSuccess"), 200);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["role delete"]);
 			},

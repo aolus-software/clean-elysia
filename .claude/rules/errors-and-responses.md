@@ -44,8 +44,12 @@ Real call sites in `src/modules/settings/role/index.ts`:
 
 ```ts
 return ResponseToolkit.success(result, "Role list retrieved successfully", 200);
+set.status = 201;
 return ResponseToolkit.success(null, "Role created successfully", 201);
 ```
+
+The toolkit only builds the body. A non-200 success needs `set.status` in the handler too, or the
+HTTP status stays 200 while the body says 201.
 
 Pass `null` as `data` when there is nothing to return — the envelope still needs the key. The
 toolkit also exposes `error`, `validationError`, `notFound`, `unauthorized`, `forbidden`, `conflict`,
@@ -71,7 +75,7 @@ side effect of unrelated work.
 required, so pass `[{ field, message }]` even for a single field:
 
 ```ts
-throw new BadRequestError("Email already registered", [
+throw new UnprocessableEntityError("Email already registered", [
 	{ field: "email", message: "Email already registered" },
 ]);
 throw new UnauthorizedError("Invalid credentials");

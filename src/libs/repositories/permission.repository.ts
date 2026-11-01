@@ -154,7 +154,11 @@ export const PermissionRepository = () => {
 			);
 
 			return {
-				data: rawData,
+				data: rawData.map(({ created_at, updated_at, ...permission }) => ({
+					...permission,
+					createdAt: created_at,
+					updatedAt: updated_at,
+				})),
 				meta: {
 					page,
 					limit,
@@ -183,7 +187,8 @@ export const PermissionRepository = () => {
 				return null;
 			}
 
-			return permission;
+			const { created_at, updated_at, ...rest } = permission;
+			return { ...rest, createdAt: created_at, updatedAt: updated_at };
 		},
 
 		findById: async (id: string, tx?: DbTransaction) => {

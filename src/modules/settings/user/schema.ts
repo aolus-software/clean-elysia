@@ -18,7 +18,7 @@ export const UserListSchema = t.Object({
 		description: "User email address",
 		examples: ["john@example.com"],
 	}),
-	status: t.Enum(UserStatusSchema),
+	status: UserStatusSchema,
 	remark: t.Nullable(
 		t.String({ description: "Optional remarks", examples: ["VIP customer"] }),
 	),
@@ -26,8 +26,8 @@ export const UserListSchema = t.Object({
 		description: "Assigned role names",
 		examples: [["admin", "editor"]],
 	}),
-	created_at: t.Date({ description: "Account creation date" }),
-	updated_at: t.Date({ description: "Last update date" }),
+	createdAt: t.Date({ description: "Account creation date" }),
+	updatedAt: t.Date({ description: "Last update date" }),
 });
 
 export const UserCreateSchema = t.Object({
@@ -46,7 +46,7 @@ export const UserCreateSchema = t.Object({
 			"Strong password with uppercase, lowercase, number, and special character",
 		examples: ["MySecure123!"],
 	}),
-	status: t.Enum(UserStatusSchema),
+	status: UserStatusSchema,
 	remark: t.Nullable(
 		t.String({ maxLength: 255, description: "Optional remarks" }),
 	),
@@ -61,8 +61,8 @@ export const UserDetailSchema = t.Object({
 	email: t.String({ description: "User email address" }),
 	status: t.Enum(UserStatus),
 	remark: t.Nullable(t.String({ description: "Optional remarks" })),
-	created_at: t.Date({ description: "Account creation date" }),
-	updated_at: t.Date({ description: "Last update date" }),
+	createdAt: t.Date({ description: "Account creation date" }),
+	updatedAt: t.Date({ description: "Last update date" }),
 	roles: t.Array(
 		t.Object({
 			id: t.String({ description: "Role ID" }),
@@ -82,7 +82,7 @@ export const UserUpdateSchema = t.Object({
 		description: "Valid email address",
 		examples: ["john@example.com"],
 	}),
-	status: t.Enum(UserStatusSchema),
+	status: UserStatusSchema,
 	remark: t.Nullable(
 		t.String({ maxLength: 255, description: "Optional remarks" }),
 	),

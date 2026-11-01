@@ -37,6 +37,7 @@ POST /auth/register
 - Password is hashed using bcrypt before storage
 - Email verification link is sent to the user
 - User account is created but marked as unverified
+- An email already held by a live account is rejected with `422`
 
 #### 2. Email Verification
 
@@ -59,6 +60,11 @@ POST /auth/login
   "password": "SecurePass123!"
 }
 ```
+
+- The password is checked before account state. An unknown email and a wrong password get the same
+  `400` invalid-credentials message, and an unknown email is still compared against a dummy bcrypt
+  hash so timing does not reveal whether the address is registered
+- Only after the password matches does login report an unverified email or an inactive account
 
 **Response:**
 
@@ -202,6 +208,10 @@ Rate limiting is implemented to prevent abuse and brute force attacks.
 | Endpoint Type | Limit        | Window     |
 | ------------- | ------------ | ---------- |
 | General API   | 100 requests | 60 seconds |
+
+Each client gets its own bucket, keyed by the TCP peer address from the listening server's
+`requestIP()`. Client headers such as `X-Forwarded-For` are never trusted for the key. Behind a
+reverse proxy every request arrives from the proxy's address, so rate-limit at the proxy as well.
 
 ### Rate Limit Exceeded Response
 

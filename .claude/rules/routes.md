@@ -52,6 +52,7 @@ POST   /auth/reset-password                          —   public
 # Profile (src/modules/profile, prefix /profile) — tags ["Profile"], AuthPlugin
 GET    /profile                                      —   own identity
 PATCH  /profile                                      —   own identity
+PATCH  /profile/password                             —   own identity
 
 # Settings / Users (prefix /settings/users) — tags ["Settings/Users"], AuthPlugin
 GET    /settings/users                               PermissionGuard ["user list"]

@@ -186,7 +186,7 @@ a type error at the call site, not at the schema.
 make db-generate     # drizzle-kit generate — writes a new SQL file under migrations/
 make db-migrate      # drizzle-kit migrate — applies pending migrations
 make reset           # db-generate + db-migrate + db-seed
-make fresh           # db-drop + db-push + db-seed — DESTRUCTIVE
+make fresh           # db-drop + db-migrate + db-seed — DESTRUCTIVE
 ```
 
 - Generate and review the SQL before applying it. Check for dropped columns, narrowed types, and

@@ -34,7 +34,7 @@ help:
 	@echo "    db-push             - Push schema to database (dev only)"
 	@echo "    db-pull             - Pull schema from database"
 	@echo "    db-studio           - Open Drizzle Studio"
-	@echo "    db-drop             - Drop all tables (dangerous!)"
+	@echo "    db-drop             - Drop every table and the migration journal (dangerous!)"
 	@echo "    db-seed             - Seed database with initial data"
 	@echo ""
 	@echo "  Database (ClickHouse):"
@@ -53,7 +53,7 @@ help:
 	@echo "    docker-deploy       - git pull + build + up + migrate (server deploy)"
 	@echo ""
 	@echo "  Workflows:"
-	@echo "    fresh               - Drop, push schema, and seed (dev only)"
+	@echo "    fresh               - Drop, migrate, and seed (dev only)"
 	@echo "    reset               - Generate, migrate, and seed"
 
 install:
@@ -146,8 +146,8 @@ docker-deploy:
 	@echo "Deployed!"
 
 # Combined workflows
-fresh: db-drop db-push db-seed
-	@echo "Database refreshed and seeded!"
+fresh: db-drop db-migrate db-seed
+	@echo "Database dropped, migrated and seeded!"
 
 reset: db-generate db-migrate db-seed
 	@echo "Database migrated and seeded!"

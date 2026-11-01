@@ -56,6 +56,8 @@
 
 	"profile.retrieved": "Profile retrieved successfully",
 	"profile.updated": "Profile updated successfully",
+	"profile.passwordChanged": "Password changed successfully",
+	"profile.currentPasswordIncorrect": "Current password is incorrect",
 
 	"role.notFound": "Role not found",
 	"role.nameExists": "Role name already exists",

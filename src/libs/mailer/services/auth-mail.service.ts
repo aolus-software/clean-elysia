@@ -2,10 +2,10 @@ import { sendEmailQueue } from "@bull";
 import { AppConfig } from "@config";
 import { db, DbTransaction, emailVerifications } from "@database";
 import { resetPasswordLifetime, verificationTokenLifetime } from "@default";
+import { NotFoundError } from "@errors";
 import { getCurrentLocale, t } from "@i18n";
 import { ForgotPasswordRepository, UserRepository } from "@repositories";
 import { log, StrToolkit } from "@utils";
-import { NotFoundError } from "elysia";
 
 export class AuthMailService {
 	async sendVerificationEmail(userId: string, tx?: DbTransaction) {

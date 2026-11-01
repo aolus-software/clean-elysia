@@ -72,6 +72,8 @@ Seed the database with initial data:
 bun run db:seed
 ```
 
+The seed creates one verified account per role (`superuser@example.com`, `admin@example.com`) with the password `S3crEtP4ssw0rd!`. Change it before using the seed anywhere shared.
+
 For development, you can also use:
 
 ```sh
@@ -226,7 +228,7 @@ For more details, see the [API Documentation Guide](./docs/API_DOCUMENTATION.md)
 - `bun run db:push` - Push schema to database (development only)
 - `bun run db:pull` - Pull schema from database
 - `bun run db:studio` - Open Drizzle Studio
-- `bun run db:drop` - Drop all tables (dangerous!)
+- `bun run db:drop` - Drop every table and the migration journal (dangerous!)
 - `bun run db:seed` - Seed database with initial data
 
 ### Database (ClickHouse)
@@ -240,7 +242,7 @@ You can also use `make` commands:
 
 - `make help` - Show all available commands
 - `make dev` - Start development server
-- `make fresh` - Drop, push schema, and seed (development)
+- `make fresh` - Drop, migrate, and seed (development)
 - `make reset` - Generate migrations, migrate, and seed
 
 ## Documentation

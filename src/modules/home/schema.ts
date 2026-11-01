@@ -1,11 +1,11 @@
 import { t } from "elysia";
 
 export const AppInfoSchema = t.Object({
-	app_name: t.String({
+	appName: t.String({
 		description: "Application name",
 		examples: ["clean-elysia"],
 	}),
-	app_env: t.String({
+	appEnv: t.String({
 		description: "Current environment",
 		examples: ["development"],
 	}),

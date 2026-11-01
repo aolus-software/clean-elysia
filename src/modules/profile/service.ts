@@ -1,9 +1,11 @@
 import { Cache, UserInformationCacheKey } from "@cache";
-import { db } from "@database";
-import { UnprocessableEntityError } from "@errors";
+import { db, users } from "@database";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
+import { t } from "@i18n";
 import { UserRepository } from "@repositories";
 import { UserInformation } from "@types";
-import { NotFoundError } from "elysia";
+import { Hash, log } from "@utils";
+import { eq } from "drizzle-orm";
 
 export const ProfileService = {
 	updateProfile: async (
@@ -42,5 +44,40 @@ export const ProfileService = {
 		await Cache.set(UserInformationCacheKey(userId), userInformation, 3600);
 
 		return userInformation;
+	},
+
+	changePassword: async (
+		userId: string,
+		data: { currentPassword: string; newPassword: string },
+	): Promise<void> => {
+		const user = await UserRepository().findById(userId);
+		if (!user) {
+			throw new NotFoundError(t("auth.userNotFound"));
+		}
+
+		const isCurrentPasswordValid = await Hash.compareHash(
+			data.currentPassword,
+			user.password,
+		);
+		if (!isCurrentPasswordValid) {
+			throw new UnprocessableEntityError(t("auth.validationError"), [
+				{
+					field: "currentPassword",
+					message: t("profile.currentPasswordIncorrect"),
+				},
+			]);
+		}
+
+		const hashedPassword = await Hash.generateHash(data.newPassword);
+		await db.transaction(async (tx) => {
+			await tx
+				.update(users)
+				.set({ password: hashedPassword })
+				.where(eq(users.id, userId));
+		});
+
+		await Cache.delete(UserInformationCacheKey(userId));
+
+		log.info({ userId }, "Password changed successfully");
 	},
 };

@@ -73,9 +73,10 @@ Never redeclare `t.Union([t.Literal("active"), …])` — it silently drifts fro
 migration. When you add a member, it goes in `userStatusEnum` **and** `UserStatus` in the same
 change, followed by `bun run db:generate` (see [documentation.md](./documentation.md)).
 
-Note: `src/modules/settings/user/schema.ts` defines `UserStatusSchema = t.Enum(UserStatus)` and
-then double-wraps it as `t.Enum(UserStatusSchema)` in most fields. Line 56 has the correct form,
-`t.Enum(UserStatus)`. Write the direct form in new code.
+Never wrap a schema in `t.Enum` again (`t.Enum(UserStatusSchema)` where `UserStatusSchema` is already
+`t.Enum(UserStatus)`). It builds an invalid schema that compiles, then fails Elysia's response
+validator on first request, so every route using it answers 500. Use `t.Enum(UserStatus)` or the
+`UserStatusSchema` constant directly.
 
 ## List query schemas come from `datatableQueryParams`
 
@@ -118,6 +119,11 @@ redeclare them per module.
   `commonPaginatedResponse(<ItemSchema>, { include: [...] })` for list endpoints. Both come from
   `@utils`. A bare TypeBox schema as `response` is wrong — the handler returns
   `{ status, success, message, data }`, so the schema must describe the envelope.
+- **Response fields are camelCase** (`createdAt`, `updatedAt`, `isAssigned`, `appName`), even though
+  the Drizzle columns are snake_case. The repository maps `created_at` to `createdAt` when it builds
+  the DTO; a snake_case key in a response schema or a `@types` DTO is a contract defect.
+- **Declare every field the handler returns.** Elysia strips properties the response schema does not
+  name, so a field missing from the schema silently never reaches the client.
 - Export response-shaped schemas separately from request-shaped ones, even when the fields overlap.
   A request that accepts `password` and a response that must never emit it are two schemas.
 - **The response schema is the last guardrail against a leak.** Password hashes, raw reset or

@@ -32,7 +32,7 @@ export async function seedUsers(): Promise<void> {
 			.values({
 				name,
 				email,
-				password: await Hash.generateHash("password"),
+				password: await Hash.generateHash("S3crEtP4ssw0rd!"),
 				email_verified_at: new Date(),
 			})
 			.returning({ id: users.id });

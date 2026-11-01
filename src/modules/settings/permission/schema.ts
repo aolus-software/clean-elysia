@@ -46,8 +46,8 @@ export const PermissionListSchema = t.Object({
 	}),
 	name: t.String({ description: "Permission name", examples: ["user.create"] }),
 	group: t.String({ description: "Permission group", examples: ["user"] }),
-	created_at: t.Date({ description: "Creation date" }),
-	updated_at: t.Date({ description: "Last update date" }),
+	createdAt: t.Date({ description: "Creation date" }),
+	updatedAt: t.Date({ description: "Last update date" }),
 });
 
 // === QUERY ===

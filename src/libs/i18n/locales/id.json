@@ -56,6 +56,8 @@
 
 	"profile.retrieved": "Profil berhasil diambil",
 	"profile.updated": "Profil berhasil diperbarui",
+	"profile.passwordChanged": "Kata sandi berhasil diubah",
+	"profile.currentPasswordIncorrect": "Kata sandi saat ini salah",
 
 	"role.notFound": "Peran tidak ditemukan",
 	"role.nameExists": "Nama peran sudah ada",

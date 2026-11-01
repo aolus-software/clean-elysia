@@ -1,9 +1,8 @@
 import { db } from "@database";
-import { UnprocessableEntityError } from "@errors";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { PermissionRepository } from "@repositories";
 import { DatatableType, PaginationResponse, PermissionList } from "@types";
-import { NotFoundError } from "elysia";
 
 export const PermissionService = {
 	findAll: async (

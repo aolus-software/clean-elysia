@@ -145,7 +145,11 @@ export const RoleRepository = () => {
 			const totalCount = await database.$count(roles, finalWhereCondition);
 
 			return {
-				data: result,
+				data: result.map(({ created_at, updated_at, ...role }) => ({
+					...role,
+					createdAt: created_at,
+					updatedAt: updated_at,
+				})),
 				meta: {
 					page,
 					limit,
@@ -252,13 +256,13 @@ export const RoleRepository = () => {
 			return {
 				id: role.id,
 				name: role.name,
-				created_at: role.created_at,
-				updated_at: role.updated_at,
+				createdAt: role.created_at,
+				updatedAt: role.updated_at,
 				permissions: allPermissions.reduce(
 					(
 						acc: {
 							group: string;
-							names: { id: string; name: string; is_assigned: boolean }[];
+							names: { id: string; name: string; isAssigned: boolean }[];
 						}[],
 						permission,
 					) => {
@@ -270,7 +274,7 @@ export const RoleRepository = () => {
 						const nameEntry = {
 							id: permission.id,
 							name: permission.name,
-							is_assigned: isAssigned,
+							isAssigned,
 						};
 
 						const existingGroup = acc.find((g) => g.group === group);

@@ -57,8 +57,9 @@ export const UserModule = new Elysia({
 	)
 	.post(
 		"",
-		async ({ body }) => {
+		async ({ body, set }) => {
 			await UserService.create(body);
+			set.status = 201;
 			return ResponseToolkit.success(null, trans("user.createSuccess"), 201);
 		},
 		{
@@ -83,6 +84,7 @@ export const UserModule = new Elysia({
 			return ResponseToolkit.success(user, trans("user.detailSuccess"), 200);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user detail"]);
 			},
@@ -103,6 +105,7 @@ export const UserModule = new Elysia({
 			return ResponseToolkit.success(null, trans("user.updateSuccess"), 200);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user edit"]);
 			},
@@ -128,6 +131,7 @@ export const UserModule = new Elysia({
 			);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				RoleGuard.canActivate(user, ["superuser"]);
 			},
@@ -153,6 +157,7 @@ export const UserModule = new Elysia({
 			);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user create"]);
 			},
@@ -177,6 +182,7 @@ export const UserModule = new Elysia({
 			);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user create"]);
 			},
@@ -197,6 +203,7 @@ export const UserModule = new Elysia({
 			return ResponseToolkit.success(null, trans("user.deleteSuccess"), 200);
 		},
 		{
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user delete"]);
 			},
