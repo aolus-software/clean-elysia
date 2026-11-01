@@ -6,7 +6,16 @@ import { rateLimit } from "elysia-rate-limit";
 
 import { RateLimitError } from "../errors/to-many-request-error";
 
+/* The rate limiter keys each client by the listening server's requestIP(), never a
+   client header. It only sees this plugin instance, whose `server` is null, so the
+   listening server is captured on start and injected; without it every client
+   shares one bucket. */
+let listeningServer: Elysia["server"] = null;
+
 export const SecurityPlugin = new Elysia({ name: "security" })
+	.onStart(({ server }) => {
+		listeningServer = server;
+	})
 	.use(cors(CORSConfig))
 	.use(
 		rateLimit({
@@ -14,6 +23,7 @@ export const SecurityPlugin = new Elysia({ name: "security" })
 			duration: 60 * 1000,
 			headers: true,
 			errorResponse: new RateLimitError(),
+			injectServer: () => listeningServer,
 		}),
 	)
 	.use(

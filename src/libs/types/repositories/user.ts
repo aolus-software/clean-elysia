@@ -26,8 +26,8 @@ export type UserList = {
 	status: UserStatusEnum;
 	roles: string[];
 	remark: string | null;
-	created_at: Date;
-	updated_at: Date;
+	createdAt: Date;
+	updatedAt: Date;
 };
 
 export type UserCreate = {
@@ -49,8 +49,8 @@ export type UserDetail = {
 		id: string;
 		name: string;
 	}[];
-	created_at: Date;
-	updated_at: Date;
+	createdAt: Date;
+	updatedAt: Date;
 };
 
 export type UserForAuth = {

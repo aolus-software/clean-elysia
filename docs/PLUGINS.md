@@ -80,7 +80,8 @@ Security-focused middleware bundle.
 **File**: `security.plugin.ts`
 
 - **CORS**: Configurable cross-origin resource sharing
-- **Rate Limiting**: 100 requests per 60 seconds (default)
+- **Rate Limiting**: 100 requests per 60 seconds (default), keyed per client by the
+  socket address (`server.requestIP()`), never by a client-supplied header
 - **Helmet**: Security headers (CSP, HSTS, X-Frame-Options, etc.)
 
 ### LoggerPlugin
@@ -89,9 +90,13 @@ Structured logging using pino.
 
 **File**: `logger.plugin.ts`
 
-- Automatic request/response logging
+- One access line per request (`Request completed`) carrying only `requestId`,
+  `method`, `path`, `status` and `duration`; the context, headers and tokens are
+  never logged
+- `ctx.log` child logger bound to the request id, method, path and route
 - Configurable log levels
-- Structured JSON output
+- Structured JSON output; an `Error` logged under `err` or `error` is serialized
+  (type, message, stack) instead of `{}`
 
 ### RequestPlugin
 

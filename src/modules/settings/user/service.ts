@@ -1,12 +1,11 @@
 import { db, users, UserStatusEnum } from "@database";
-import { UnprocessableEntityError } from "@errors";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { UserRepository } from "@repositories";
 import { DatatableType, PaginationResponse, UserList } from "@types";
 import { Hash } from "@utils";
 import { eq } from "drizzle-orm";
-import { NotFoundError } from "elysia";
 
 export const UserService = {
 	findAll: async (

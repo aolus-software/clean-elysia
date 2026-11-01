@@ -59,8 +59,9 @@ export const PermissionModule = new Elysia({
 	// Create permission
 	.post(
 		"",
-		async ({ body }) => {
+		async ({ body, set }) => {
 			await PermissionService.create(body);
+			set.status = 201;
 
 			return ResponseToolkit.success(
 				null,

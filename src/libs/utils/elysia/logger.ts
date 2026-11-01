@@ -1,6 +1,6 @@
 import { LoggerOptions } from "@bogeychan/elysia-logger/types";
 import { AppConfig } from "@config";
-import { destination, Logger, pino } from "pino";
+import { destination, Logger, pino, stdSerializers } from "pino";
 
 const isProd = AppConfig.APP_ENV !== "development";
 const logFile = destination({
@@ -24,7 +24,7 @@ const options: LoggerOptions = {
 	level: AppConfig.LOG_LEVEL,
 	base: null,
 	timestamp: () =>
-		`<${new Date().toLocaleString("en-US", {
+		`,"time":"${new Date().toLocaleString("en-US", {
 			weekday: "long",
 			day: "numeric",
 			month: "short",
@@ -33,8 +33,9 @@ const options: LoggerOptions = {
 			minute: "2-digit",
 			second: "2-digit",
 			timeZone: AppConfig.APP_TIMEZONE,
-		})}>`,
+		})}"`,
 	transport: isProd ? undefined : transport,
+	serializers: { err: stdSerializers.err, error: stdSerializers.err },
 	formatters: {
 		level(label) {
 			return { level: label };

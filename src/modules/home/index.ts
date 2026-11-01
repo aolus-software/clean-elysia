@@ -22,8 +22,8 @@ export const HomeModule = new Elysia({
 		() => {
 			return ResponseToolkit.success(
 				{
-					app_name: AppConfig.APP_NAME,
-					app_env: AppConfig.APP_ENV,
+					appName: AppConfig.APP_NAME,
+					appEnv: AppConfig.APP_ENV,
 					date: DateToolkit.getDateTimeInformativeWithTimezone(
 						DateToolkit.now(),
 					),

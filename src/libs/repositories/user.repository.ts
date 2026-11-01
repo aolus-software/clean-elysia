@@ -36,6 +36,7 @@ import {
 	not,
 	or,
 	SQL,
+	sql,
 } from "drizzle-orm";
 
 /* Keys are the API-facing sort names (camelCase, aligned with the shared
@@ -110,7 +111,7 @@ export const UserRepository = () => {
 					or(
 						ilike(users.name, `%${search}%`),
 						ilike(users.email, `%${search}%`),
-						ilike(users.status, `%${search}%`),
+						ilike(sql`${users.status}::text`, `%${search}%`),
 					),
 				);
 			}
@@ -234,8 +235,8 @@ export const UserRepository = () => {
 				status: user.status,
 				remark: user.remark,
 				roles: user.user_roles.map((userRole) => userRole.role.name),
-				created_at: user.created_at,
-				updated_at: user.updated_at,
+				createdAt: user.created_at,
+				updatedAt: user.updated_at,
 			}));
 
 			return {
@@ -338,8 +339,8 @@ export const UserRepository = () => {
 					id: userRole.role.id,
 					name: userRole.role.name,
 				})),
-				created_at: userDetail.created_at,
-				updated_at: userDetail.updated_at,
+				createdAt: userDetail.created_at,
+				updatedAt: userDetail.updated_at,
 			};
 		},
 
@@ -429,8 +430,8 @@ export const UserRepository = () => {
 					id: userRole.role.id,
 					name: userRole.role.name,
 				})),
-				created_at: user.created_at,
-				updated_at: user.updated_at,
+				createdAt: user.created_at,
+				updatedAt: user.updated_at,
 			};
 		},
 

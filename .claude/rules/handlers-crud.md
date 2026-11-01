@@ -68,8 +68,9 @@ Returns `null` data with an explicit `201`.
 ```ts
 .post(
 	"",
-	async ({ body }) => {
+	async ({ body, set }) => {
 		await RoleService.create(body);
+		set.status = 201;
 		return ResponseToolkit.success(null, "Role created successfully", 201);
 	},
 	{
@@ -88,7 +89,8 @@ Returns `null` data with an explicit `201`.
 )
 ```
 
-The `201` must appear in three places and agree: the third argument to `ResponseToolkit.success`, the
+The `201` must appear in four places and agree: `set.status` (the toolkit only writes the body, so
+without it the HTTP status stays 200), the third argument to `ResponseToolkit.success`, the
 `include` array, and the route's documented status. `ResponseToolkit.created(data, message)` is an
 equivalent shorthand — pick one style per module and stay with it.
 

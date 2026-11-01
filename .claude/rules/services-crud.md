@@ -149,7 +149,7 @@ create: async (data: {
 }) => {
 	const existing = await UserRepository().findLiveByEmail(data.email);
 	if (existing) {
-		throw new BadRequestError(t("user.emailExists"), [
+		throw new UnprocessableEntityError(t("user.emailExists"), [
 			{ field: "email", message: t("user.emailExists") },
 		]);
 	}
@@ -188,7 +188,7 @@ update: async (
 
 	const existing = await UserRepository().findLiveByEmail(data.email, id);
 	if (existing) {
-		throw new BadRequestError(t("user.emailExists"), [
+		throw new UnprocessableEntityError(t("user.emailExists"), [
 			{ field: "email", message: t("user.emailExists") },
 		]);
 	}
@@ -249,19 +249,19 @@ one place. Reaching for `UserRepository().getDetail` here would get `null` and n
 
 ```ts
 import { db, users, UserStatusEnum } from "@database";
-import { BadRequestError } from "@errors";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { UserRepository } from "@repositories";
 import { DatatableType, PaginationResponse, UserList } from "@types";
 import { Hash } from "@utils";
 import { eq } from "drizzle-orm";
-import { NotFoundError } from "elysia";
 ```
 
-Import only what the service actually uses. `BadRequestError` and `UnprocessableEntityError` come
-from `@errors`; **`NotFoundError` comes from `elysia`**, not from `@errors` — both are caught by
-`ErrorHandlerPlugin`, but the repositories and services here use the `elysia` one. Every service that
+Import only what the service actually uses. `BadRequestError`, `UnprocessableEntityError` and
+`NotFoundError` all come from `@errors`. **Never import `NotFoundError` from `elysia`**: the error
+handler treats Elysia's class as an unmatched route and answers "Route not found", discarding the
+service's translated message. Every service that
 throws also imports `t` from `@i18n`, because the message belongs to the throw.
 
 ## Checklist

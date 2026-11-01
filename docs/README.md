@@ -184,6 +184,7 @@ app.post("/login", ({ body }) => AuthService.signIn(body), {
 - **Profile Module** (`/profile/*`)
   - Get user profile
   - Update profile information
+  - Change own password
 
 - **Settings Module** (`/settings/*`)
   - User management (CRUD)

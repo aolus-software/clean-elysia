@@ -374,6 +374,48 @@ Content-Type: application/json
 }
 ```
 
+#### Change Password
+
+Changes the authenticated user's own password. No permission is required. `newPassword` must satisfy
+the same strong-password rule as registration. On success the cached user information is cleared.
+
+**Request:**
+
+```http
+PATCH /profile/password
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "currentPassword": "MySecure123!",
+  "newPassword": "NewSecure123!"
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+	"status": 200,
+	"success": true,
+	"message": "Password changed successfully",
+	"data": null
+}
+```
+
+**Wrong current password (422):**
+
+```json
+{
+	"status": 422,
+	"success": false,
+	"message": "Validation error",
+	"errors": [
+		{ "field": "currentPassword", "message": "Current password is incorrect" }
+	]
+}
+```
+
 ---
 
 ## Validation Rules

@@ -29,7 +29,7 @@ bun run db:clickhouse:migrate
 bun run db:clickhouse:status
 ```
 
-Combined workflows in the `Makefile`: `make fresh` (db:drop + db:push + db:seed), `make reset` (db:generate + db:migrate + db:seed).
+Combined workflows in the `Makefile`: `make fresh` (db:drop + db:migrate + db:seed; `db:drop` drops the `public` and `drizzle` schemas and refuses to run in production), `make reset` (db:generate + db:migrate + db:seed).
 
 No test runner is configured. Don't invent `bun test` commands unless tests have been added.
 
@@ -85,7 +85,7 @@ Throw custom errors from anywhere; `ErrorHandlerPlugin` maps them to status code
 
 - `BadRequestError` → 400 (carries a `field/message[]` array)
 - `UnprocessableEntityError` → 422
-- `NotFoundError` (note: import from `elysia` in some places, from `@errors` in others — both are caught)
+- `NotFoundError` → 404 — import it from `@errors`; Elysia's own `NotFoundError` is answered as "Route not found" and loses the message
 - `UnauthorizedError` → 401, `ForbiddenError` → 403, `RateLimitError` → 429
 
 Build successful responses with `ResponseToolkit.success(...)` / `.created(...)`. Wrap route response schemas with `commonResponse(schema, { include: [...] })` or `commonPaginatedResponse(...)` from `@utils`; the `include` array lists the status codes that should appear in the OpenAPI spec.
@@ -97,7 +97,7 @@ Build successful responses with `ResponseToolkit.success(...)` / `.created(...)`
 ### Databases
 
 - PostgreSQL via `pg` + Drizzle (`src/libs/database/postgres/index.ts` exports `db`, `schema`, and `DbTransaction`).
-- Redis via `ioredis` (`src/libs/database/redis/`), reused for both cache and BullMQ connections.
+- Redis (`src/libs/database/redis/`): Bun's native `RedisClient` for cache; BullMQ 6 gets plain connection options and opens its own `ioredis` client (`ioredis` is a direct dependency).
 - ClickHouse is optional; migrations have their own script runner under `src/libs/database/clickhouse/scripts/migrate.ts`.
 
 ## Conventions (enforced by ESLint/Prettier)

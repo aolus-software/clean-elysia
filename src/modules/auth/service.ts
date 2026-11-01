@@ -1,5 +1,5 @@
 import { db, emailVerifications, passwordResetTokens, users } from "@database";
-import { BadRequestError } from "@errors";
+import { BadRequestError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { ForgotPasswordRepository, UserRepository } from "@repositories";
@@ -7,10 +7,24 @@ import { UserInformation } from "@types";
 import { Hash, log } from "@utils";
 import { and, eq, isNull } from "drizzle-orm";
 
+const TIMING_EQUALISER_HASH =
+	"$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+
 export const AuthService = {
 	singIn: async (email: string, password: string): Promise<UserInformation> => {
 		const user = await UserRepository().findByEmail(email);
-		if (!user) {
+
+		/* Verify the password before looking at account state, and answer an
+		   unknown address and a wrong password with the same message, so an
+		   unauthenticated caller cannot tell a registered address from an unknown
+		   one. The dummy comparison keeps the unknown-address path as slow as a
+		   real one. */
+		const isPasswordValid = await Hash.compareHash(
+			password,
+			user?.password ?? TIMING_EQUALISER_HASH,
+		);
+
+		if (!user || !isPasswordValid) {
 			throw new BadRequestError(t("auth.validationError"), [
 				{
 					field: "email",
@@ -37,17 +51,6 @@ export const AuthService = {
 			]);
 		}
 
-		const isPasswordValid = await Hash.compareHash(password, user.password);
-
-		if (!isPasswordValid) {
-			throw new BadRequestError(t("auth.validationError"), [
-				{
-					field: "email",
-					message: t("auth.invalidCredentials"),
-				},
-			]);
-		}
-
 		// Log successful login
 		log.info(
 			{ userId: user.id, email: user.email },
@@ -62,9 +65,9 @@ export const AuthService = {
 		email: string;
 		password: string;
 	}): Promise<void> => {
-		const existingUser = await UserRepository().findByEmail(data.email);
+		const existingUser = await UserRepository().findLiveByEmail(data.email);
 		if (existingUser) {
-			throw new BadRequestError(t("auth.validationError"), [
+			throw new UnprocessableEntityError(t("auth.validationError"), [
 				{
 					field: "email",
 					message: t("auth.emailAlreadyRegistered"),

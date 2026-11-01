@@ -18,10 +18,11 @@ src/bull/
 ## Queue file
 
 - One queue per file. Filename: `<job>-queue.ts`. Export name: `<job>Queue` (camelCase).
-- Connection comes from `RedisClient.getQueueRedisClient()` (`@database`) — never `new IORedis(...)` directly. Queues and workers share that singleton so they hit the same Redis DB BullMQ expects.
+- Connection comes from `RedisClient.getQueueConnection()` (`@database`) — plain connection options, never `new IORedis(...)` directly. BullMQ 6 builds its own `ioredis` client from them (`ioredis` is a direct dependency because BullMQ only lists it as an optional peer), so queues and workers hit the same Redis DB.
 - Queue name is a kebab-case string (`"send-email"`) and must match between the queue and its worker.
 - Type the queue payload: `new Queue<EmailOptions>("send-email", { ... })`.
-- Set sane `defaultJobOptions` if retries matter:
+- The email queue sets these `defaultJobOptions`; without `attempts` BullMQ tries a job once and the
+  worker's re-throw retries nothing. A new queue sets its own the same way:
   ```ts
   defaultJobOptions: {
     attempts: 3,

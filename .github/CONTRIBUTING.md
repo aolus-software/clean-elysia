@@ -58,7 +58,7 @@ make db-migrate       # drizzle-kit migrate
 make db-push          # drizzle-kit push (dev only)
 make db-studio        # drizzle-kit studio
 make db-seed
-make fresh            # db-drop + db-push + db-seed (dev only, destroys data)
+make fresh            # db-drop + db-migrate + db-seed (dev only, destroys data)
 make reset            # db-generate + db-migrate + db-seed
 ```
 

@@ -84,9 +84,7 @@ export type SuccessResponse202<T> = {
 };
 
 export type SuccessResponse<T> =
-	| SuccessResponse200<T>
-	| SuccessResponse201<T>
-	| SuccessResponse202<T>;
+	SuccessResponse200<T> | SuccessResponse201<T> | SuccessResponse202<T>;
 
 export type ErrorResponse = {
 	status: 400 | 401 | 403 | 404 | 409 | 429 | 500 | 503;

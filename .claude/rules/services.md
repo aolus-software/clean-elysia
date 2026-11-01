@@ -80,8 +80,8 @@ Throw; never return an error object or a `{ ok: false }` union.
 | Situation | Error |
 | --------- | ----- |
 | Row genuinely missing | `NotFoundError` |
-| Input invalid given DB state (duplicate email) | `BadRequestError` with field details |
-| Business rule fails after validation | `UnprocessableEntityError` |
+| Input invalid given DB state the schema could not reject | `BadRequestError` with field details |
+| Uniqueness conflict (duplicate email, name) or business rule fails after validation | `UnprocessableEntityError` |
 | Caller is not permitted | leave it to the guard — do not throw `ForbiddenError` from a service |
 
 `ErrorHandlerPlugin` maps each to its status. See [errors-and-responses.md](./errors-and-responses.md).

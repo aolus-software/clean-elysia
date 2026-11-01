@@ -53,7 +53,7 @@ Nested feature groups (e.g. `settings/user/`, `settings/role/`) follow the same 
   ```
 - Service methods own orchestration: validation that depends on DB state, transactions, cache invalidation, queue dispatch. They call `Repository().method(...)` — invoke the factory **each call**, never destructure once.
 - Wrap multi-step mutations in `db.transaction(async (tx) => { ... })` and pass `tx` down to repository methods. Anything that writes to ≥2 tables almost always needs a transaction.
-- Use `BadRequestError` for invalid state, `UnprocessableEntityError` for input that fails business rules post-validation, `NotFoundError` (from `elysia` — same one re-thrown) for missing entities.
+- Use `BadRequestError` for invalid state, `UnprocessableEntityError` for input that fails business rules post-validation, `NotFoundError` (from `@errors`, never `elysia`, whose class is answered as "Route not found") for missing entities.
 - Cache invalidation: when mutating user-shaped data, refresh `Cache.set(UserInformationCacheKey(userId), ...)` so `AuthPlugin` sees the new value on the next request.
 - Log meaningful events with the structured `log` from `@utils`: `log.info({ userId, email }, "User logged in successfully")`. Never use `console.*`.
 - If the service is reused outside its module, register it in `src/bootstrap.ts` so it can resolve from the DI container (see `rules/di.md`).

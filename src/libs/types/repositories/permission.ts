@@ -2,8 +2,8 @@ export type PermissionList = {
 	id: string;
 	name: string;
 	group: string;
-	created_at: Date;
-	updated_at: Date;
+	createdAt: Date;
+	updatedAt: Date;
 };
 
 export type PermissionSelectOptions = {

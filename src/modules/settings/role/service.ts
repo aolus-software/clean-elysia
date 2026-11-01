@@ -1,9 +1,8 @@
 import { db } from "@database";
-import { UnprocessableEntityError } from "@errors";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { RoleRepository } from "@repositories";
 import { DatatableType, PaginationResponse, RoleList } from "@types";
-import { NotFoundError } from "elysia";
 
 export const RoleService = {
 	findAll: async (

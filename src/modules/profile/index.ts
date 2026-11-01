@@ -4,6 +4,7 @@ import { UserInformationTypeBox } from "@types";
 import { commonResponse, ResponseToolkit } from "@utils";
 import Elysia, { t } from "elysia";
 
+import { ProfileChangePasswordSchema } from "./schema";
 import { ProfileService } from "./service";
 
 export const ProfileModule = new Elysia({
@@ -59,6 +60,32 @@ export const ProfileModule = new Elysia({
 			detail: {
 				summary: "Update user profile",
 				description: "Update the authenticated user's profile information",
+			},
+		},
+	)
+
+	// ============================================
+	// CHANGE PASSWORD
+	// ============================================
+	.patch(
+		"/password",
+		async ({ user, body }) => {
+			await ProfileService.changePassword(user.id, body);
+			return ResponseToolkit.success(
+				null,
+				trans("profile.passwordChanged"),
+				200,
+			);
+		},
+		{
+			body: ProfileChangePasswordSchema,
+			response: commonResponse(t.Null(), {
+				include: [200, 401, 404, 422],
+			}),
+			detail: {
+				summary: "Change own password",
+				description:
+					"Change the authenticated user's password. Requires the current password; the new one must satisfy the strong-password rule. A wrong current password returns 422 on `currentPassword`. Clears the cached user information. No permission required.",
 			},
 		},
 	);

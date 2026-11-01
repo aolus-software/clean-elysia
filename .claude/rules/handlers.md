@@ -49,8 +49,9 @@ ResponseToolkit.success(data, message, status);              // status 200 | 201
 ResponseToolkit.paginated(rows, meta, message);              // meta is { page, limit, totalCount }
 ```
 
-- Create routes return `ResponseToolkit.success(null, "X created successfully", 201)` — the explicit
-  `201` is required; the default is 200.
+- Create routes set `set.status = 201` and return `ResponseToolkit.success(null, "X created successfully", 201)`.
+  Both are required: the toolkit only writes `status` into the body, and the HTTP status stays 200
+  unless the handler sets it.
 - Update and delete routes return `null` data with a 200.
 - The envelope is `{ status, success, message, data }` — `status` appears in the body as well as being
   the HTTP status. Never hand-build that object.
