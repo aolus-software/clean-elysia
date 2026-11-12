@@ -65,9 +65,18 @@ CLIENT_URL="http://localhost:3000"
 
 PostgreSQL database configuration.
 
-| Variable       | Type     | Description                  |
-| -------------- | -------- | ---------------------------- |
-| `DATABASE_URL` | `string` | PostgreSQL connection string |
+| Variable                        | Type      | Default | Description                                                                               |
+| ------------------------------- | --------- | ------- | ----------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                  | `string`  | —       | PostgreSQL connection string                                                              |
+| `DB_POOL_MAX`                   | `number`  | `10`    | Pool size per process; integer >= 1. Cluster mode multiplies it by the worker count       |
+| `DB_POOL_IDLE_TIMEOUT_MS`       | `number`  | `30000` | An idle connection is closed after this long; integer >= 1                                |
+| `DB_POOL_CONNECTION_TIMEOUT_MS` | `number`  | `5000`  | A query waiting for a free connection fails after this long; integer >= 1                 |
+| `DB_LOG_QUERIES`                | `boolean` | `false` | Drizzle logs each statement at `debug` (text and parameter count, never parameter values) |
+
+`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_SLOW_QUERY_MS` in `.env.example`
+are read only by `docker-compose.yml` to provision the container. `POSTGRES_SLOW_QUERY_MS` (default
+`100`) sets `log_min_duration_statement`: statements slower than that many milliseconds go to the
+container log, `-1` disables it.
 
 **Example**:
 
@@ -274,6 +283,10 @@ here so an `.env` can be carried across without silently losing a setting.
 
 **Elysia-only** (no NestJS equivalent): `APP_CLUSTER_MODE`, `APP_CLUSTER_WORKERS`, `APP_REUSE_PORT`,
 `LOG_LEVEL`, `CLICKHOUSE_HOST`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`.
+
+**Pool and query log:** `DB_POOL_MAX`, `DB_POOL_IDLE_TIMEOUT_MS`, `DB_POOL_CONNECTION_TIMEOUT_MS` and
+`DB_LOG_QUERIES` (plus the compose-only `POSTGRES_SLOW_QUERY_MS`) are recent; check the sibling's
+`.env.example` before assuming it reads them.
 
 **NestJS-only**: `THROTTLER_TTL`, `THROTTLER_LIMIT`, `APP_VERSION`. `THROTTLER_TTL` /
 `THROTTLER_LIMIT` drive the Nest throttler from the environment; the Elysia rate limit is

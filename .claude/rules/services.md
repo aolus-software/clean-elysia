@@ -97,6 +97,10 @@ await Cache.set(UserInformationCacheKey(userId), updated);
 
 Cache keys live in `@cache` — never build one inline.
 
+Every role or permission create, update or delete also calls `forgetSelectOptions()` (`@cache`) after
+its transaction: `SelectOptionService` caches both option lists for 3600 s. A direct database write
+(the seeder, `make fresh`) does not, so those lists can lag by up to an hour until Redis is flushed.
+
 ## Queues and mail
 
 A service produces jobs; a handler never does. Mail goes through `AuthMailService` (which enqueues)

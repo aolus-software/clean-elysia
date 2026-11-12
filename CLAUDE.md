@@ -96,7 +96,8 @@ Build successful responses with `ResponseToolkit.success(...)` / `.created(...)`
 
 ### Databases
 
-- PostgreSQL via `pg` + Drizzle (`src/libs/database/postgres/index.ts` exports `db`, `schema`, and `DbTransaction`).
+- PostgreSQL via `pg` + Drizzle (`src/libs/database/postgres/index.ts` exports `db`, `schema`, and `DbTransaction`). The pool is per process (`DB_POOL_*`); `DB_LOG_QUERIES=true` logs statements at `debug` (text and parameter count only), and the compose postgres logs anything slower than `POSTGRES_SLOW_QUERY_MS`.
+- Select-option lists are cached at `PermissionSelectOptionsCacheKey()` / `RoleSelectOptionsCacheKey()` for 3600 s; every role or permission create/update/delete calls `forgetSelectOptions()` (`@cache`).
 - Redis (`src/libs/database/redis/`): Bun's native `RedisClient` for cache; BullMQ 6 gets plain connection options and opens its own `ioredis` client (`ioredis` is a direct dependency).
 - ClickHouse is optional; migrations have their own script runner under `src/libs/database/clickhouse/scripts/migrate.ts`.
 

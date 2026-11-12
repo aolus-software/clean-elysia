@@ -34,6 +34,9 @@ APP_CLUSTER_MODE=true APP_CLUSTER_WORKERS=0 bun run src/index.ts
 Trade-off: a single OS process tree. If the primary dies, all workers go with
 it — pair with a supervisor (systemd / Docker `restart`) for resilience.
 
+Every worker (and every reuse-port or replica process below) opens its own PostgreSQL pool of
+`DB_POOL_MAX` connections: keep `processes x DB_POOL_MAX` under the server's `max_connections`.
+
 ## 2. Bun reuse-port
 
 Each process is fully independent; the kernel spreads connections via

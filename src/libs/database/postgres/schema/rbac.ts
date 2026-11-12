@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+	index,
 	pgTable,
 	primaryKey,
 	timestamp,
@@ -45,6 +46,9 @@ export const rolePermissions = pgTable(
 	},
 	(table) => ({
 		pk: primaryKey({ columns: [table.role_id, table.permission_id] }),
+		permissionIdIndex: index("role_permissions_permission_id_index").on(
+			table.permission_id,
+		),
 	}),
 );
 
@@ -75,6 +79,7 @@ export const userRoles = pgTable(
 	},
 	(table) => ({
 		pk: primaryKey({ columns: [table.user_id, table.role_id] }),
+		roleIdIndex: index("user_roles_role_id_index").on(table.role_id),
 	}),
 );
 
