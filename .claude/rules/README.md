@@ -49,6 +49,7 @@ Ordered outside-in, the way a request travels.
 | [rate-limiting.md](./rate-limiting.md) | The global limiter inside `SecurityPlugin`, and why its numbers are hardcoded |
 | [queue.md](./queue.md) | `src/bull/` — one queue and one worker per file, the shared Redis connection, typed payloads, and re-throwing so BullMQ retries |
 | [imports-and-naming.md](./imports-and-naming.md) | Path aliases, import order, file and symbol naming |
+| [testing.md](./testing.md) | `tests/` — the `bun test` layout, the `_test` database guard, the mocked mail queue, the total-coverage gate |
 | [commit.md](./commit.md) | Conventional Commits, what runs before a commit, what never gets committed |
 
 ## How to use

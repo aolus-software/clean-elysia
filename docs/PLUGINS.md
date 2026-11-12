@@ -170,12 +170,12 @@ export const CounterPlugin = new Elysia({ name: "counter" })
 Plugins are registered using `.use()`:
 
 ```typescript
-// src/index.ts
-const app = new Elysia()
+// src/app.ts (src/server.ts calls app.listen(AppConfig.APP_PORT))
+export const app = new Elysia()
+	.use(LocalePlugin)
 	.use(DocsPlugin)
 	.use(ErrorHandlerPlugin)
-	.use(bootstraps)
-	.listen(AppConfig.APP_PORT);
+	.use(bootstraps);
 ```
 
 ### In the Base App

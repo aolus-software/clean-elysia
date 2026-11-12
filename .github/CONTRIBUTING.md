@@ -62,8 +62,16 @@ make fresh            # db-drop + db-migrate + db-seed (dev only, destroys data)
 make reset            # db-generate + db-migrate + db-seed
 ```
 
-There is **no test runner configured**. Don't add `bun test` commands to docs or CI unless you are
-also adding the tests and the runner in the same PR.
+Tests use Bun's built-in runner (see `.claude/rules/testing.md`). Integration tests need a database
+whose name ends in `_test` and a Redis:
+
+```bash
+make test-unit                 # no database
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/clean_elysia_test make test
+make test-coverage             # what CI runs; fails below the total line gate in tests/coverage-gate.ts
+```
+
+A new route or a changed service rule comes with its test in the same PR.
 
 ### Running the whole stack in Docker
 

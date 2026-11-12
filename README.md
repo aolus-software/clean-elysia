@@ -140,8 +140,10 @@ The `postgres` service logs every statement slower than `POSTGRES_SLOW_QUERY_MS`
 
 ```
 src/
+├── app.ts                 # Composed Elysia app (not listening); used by server.ts and tests
 ├── base.ts                # Base Elysia app with core plugins
 ├── index.ts               # Entry point
+├── server.ts              # Binds app.ts to APP_PORT
 ├── bull/                  # Background jobs
 │   ├── queue/             # Job queues
 │   └── worker/            # Job workers
@@ -161,6 +163,11 @@ src/
     ├── home/              # Root/health endpoints
     ├── profile/           # User profile
     └── settings/          # Application settings
+tests/
+├── setup.ts               # bun test preload: pins test env (NODE_ENV, JWT secret, *_test DB, Redis db 15)
+├── helpers/               # in-process app + queue capture, database reset, login/token helpers
+├── unit/                  # pure toolkits, no database or Redis
+└── integration/           # HTTP through app.handle against PostgreSQL + Redis
 ```
 
 ## Code Quality
@@ -188,6 +195,24 @@ Type checking:
 ```sh
 bun run typecheck
 ```
+
+## Tests
+
+Bun's built-in runner (`bun test`), configured in `bunfig.toml`. `tests/unit/` needs nothing running;
+`tests/integration/` drives the app in-process through `app.handle(new Request(...))` against a real
+PostgreSQL and Redis. The integration helpers migrate, truncate and re-seed the database, so they
+refuse any database whose name does not end in `_test`. Redis uses db `15` (`TEST_REDIS_DB`) and is
+flushed. Mail jobs are captured in memory, never queued.
+
+```sh
+docker compose up -d postgres redis
+docker compose exec postgres createdb -U postgres clean_elysia_test
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/clean_elysia_test bun run test
+```
+
+`bun run test:coverage` writes `coverage/lcov.info` and fails when total line coverage drops below
+64% (`tests/coverage-gate.ts`). That is the current baseline, raised as tests land. CI runs it with
+PostgreSQL and Redis services.
 
 ## API Documentation
 
@@ -227,6 +252,14 @@ For more details, see the [API Documentation Guide](./docs/API_DOCUMENTATION.md)
 - `bun run format` - Format code with Prettier
 - `bun run typecheck` - Run TypeScript type checking
 
+### Tests
+
+- `bun run test` - Run every test (integration needs `TEST_DATABASE_URL` + Redis)
+- `bun run test:watch` - Re-run tests on change
+- `bun run test:unit` - Run unit tests (no database)
+- `bun run test:integration` - Run integration tests against `TEST_DATABASE_URL`
+- `bun run test:coverage` - Run every test with coverage and the 64% total line gate
+
 ### Database (PostgreSQL/Drizzle)
 
 - `bun run db:generate` - Generate migration files from schema
@@ -248,6 +281,7 @@ You can also use `make` commands:
 
 - `make help` - Show all available commands
 - `make dev` - Start development server
+- `make test` / `make test-unit` / `make test-integration` / `make test-coverage` - Run the tests
 - `make fresh` - Drop, migrate, and seed (development)
 - `make reset` - Generate migrations, migrate, and seed
 

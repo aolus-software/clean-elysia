@@ -17,7 +17,7 @@ wrote.
 
 | Doc | Update it when… |
 |---|---|
-| `README.md` | setup steps, `package.json` scripts, env vars, the project-structure tree, the Docker section, or the layer/architecture summary change — its "Scripts" and "Makefile Commands" sections quote both `package.json` and the `Makefile` verbatim |
+| `README.md` | setup steps, `package.json` scripts, the "Tests" section and coverage gate, env vars, the project-structure tree, the Docker section, or the layer/architecture summary change — its "Scripts" and "Makefile Commands" sections quote both `package.json` and the `Makefile` verbatim |
 | `CLAUDE.md` | a path alias, the bootstrap order, the layering description, a convention, a `docs/` reference, or a new module / plugin / runtime surface changes |
 | `Makefile` | a canonical command is added, renamed, or removed. Three places move together: the `.PHONY` line, the `help:` target's `@echo` block, and the recipe itself. This covers the whole Docker suite (`docker-build`, `docker-up`, `docker-down`, `docker-restart`, `docker-logs`, `docker-ps`, `docker-migrate`, `docker-seed`, `docker-deploy`) and the combined workflows (`fresh`, `reset`) — plus `README.md`, which quotes them |
 | `docker-compose.yml`, `Dockerfile` | a service, port, volume, or build stage changes — `docker-migrate` / `docker-seed` build the `migrator` target and join `$(DOCKER_NETWORK)`, so a renamed stage or network breaks the `Makefile` too |
@@ -33,8 +33,9 @@ wrote.
 | `docs/README.md` | a file is added to or removed from `docs/` — it is the index |
 | `src/libs/i18n/locales/{en,id}.json` | a user-facing string is added — **both languages, in the same change**, then regenerate the key union with `bun run i18n:keys` (`src/libs/i18n/locales/keys.generated.ts` is generated, never hand-edited) |
 | `tsconfig.json` `paths` | a new `src/libs/<bucket>/` is added — the alias list in `CLAUDE.md` and the bucket table in `.claude/rules/shared-code.md` must match it |
-| `.claude/rules/*.md` | a coded convention changes, or a new pattern ships with no rule yet — write one. The current set is `contradiction-halt.md`, `documentation.md`, `audit-findings.md`, `di.md`, `modules.md`, `openapi.md`, `queue.md`, `repositories.md`, `shared-code.md` |
+| `.claude/rules/*.md` | a coded convention changes, or a new pattern ships with no rule yet — write one. The current set is listed in `.claude/rules/README.md` (including `testing.md`) |
 | `.claude/commands/*.md` | a command's workflow or scope changes |
+| `tests/**` | a route, guard, status code, or toolkit the suite exercises changes — the test moves in the same change; `tests/coverage-gate.ts`'s `MIN_LINE_COVERAGE` is raised (never lowered) when coverage grows. See `testing.md` |
 | `.github/copilot-instructions.md` | a convention it illustrates changes — it mirrors `CLAUDE.md`'s repository/service/queue examples and drifts silently |
 
 ## What "up to date" means

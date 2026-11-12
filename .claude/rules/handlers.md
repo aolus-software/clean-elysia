@@ -94,7 +94,7 @@ The third argument must carry:
   then the rest — Elysia scopes the plugin to everything chained after it. `src/modules/auth/index.ts`
   is the pattern.
 - Only `home` and `auth` chain `baseApp`; `profile` and all four `settings/*` modules chain
-  `AuthPlugin` alone, and `src/server.ts` does not apply `baseApp` at the root either. That is fine:
+  `AuthPlugin` alone, and the root app in `src/app.ts` does not apply `baseApp` either. That is fine:
   every plugin inside `baseApp` declares `{ as: "global" }`, so its hooks reach every route in the
   app regardless of which module chained what. That declaration is what makes it work — see
   [plugins.md](./plugins.md), which explains why omitting it fails silently.

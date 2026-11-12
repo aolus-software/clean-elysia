@@ -54,6 +54,7 @@ first:
 
 - **The `.agents/skills/` bundle is vendored.** `.claude/skills` is a symlink to `.agents/skills`.
   Do not edit it as part of unrelated work, and flag rather than "modernise" it.
-- **There are no tests and no test runner.** `package.json` defines no test script and `CLAUDE.md`
-  says so explicitly, so none of the invariants above has a regression test. Do not cite a test as
-  evidence that something is safe, and do not invent `bun test` commands.
+- **The test suite is thin.** `bun test` covers the pure toolkits plus login, register, profile, the
+  user list's sort/filter allow-lists, and the RBAC 403 / superuser-only paths (see
+  [testing.md](./testing.md)). Every other invariant above has no regression test. Do not cite the
+  suite as evidence for code it does not exercise.

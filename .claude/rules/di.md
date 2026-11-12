@@ -19,7 +19,7 @@ If none of those apply, just `import { FooService } from "./service"` — adding
 
 ## Registration
 
-All registrations live in **one** place: `src/bootstrap.ts`. That function is called once from `src/index.ts` **before** the Elysia app is built. Any new service that needs to be DI-resolvable must be added there:
+All registrations live in **one** place: `src/bootstrap.ts`. That function is called once from `src/app.ts` **before** the Elysia app is built. Any new service that needs to be DI-resolvable must be added there:
 
 ```ts
 import { container } from "@plugins";

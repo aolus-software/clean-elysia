@@ -52,8 +52,8 @@
 ## How was this tested?
 
 <!--
-There is no test runner configured in this repo, so say what you actually exercised:
-commands run, endpoints hit, request/response bodies observed. "It builds" is not testing.
+Say what you actually exercised: `bun run test:coverage` (needs TEST_DATABASE_URL + Redis),
+tests added or changed, endpoints hit, request/response bodies observed. "It builds" is not testing.
 -->
 
 ## Screenshots or output
