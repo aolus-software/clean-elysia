@@ -1,3 +1,4 @@
+import { forgetSelectOptions } from "@cache";
 import { db } from "@database";
 import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
@@ -34,6 +35,7 @@ export const PermissionService = {
 		await db.transaction(async (tx) => {
 			await PermissionRepository().create(data, tx);
 		});
+		await forgetSelectOptions();
 	},
 
 	detail: async (id: string): Promise<PermissionList> => {
@@ -67,6 +69,7 @@ export const PermissionService = {
 		await db.transaction(async (tx) => {
 			await PermissionRepository().update(id, data, tx);
 		});
+		await forgetSelectOptions();
 	},
 
 	delete: async (id: string): Promise<void> => {
@@ -78,5 +81,6 @@ export const PermissionService = {
 		await db.transaction(async (tx) => {
 			await PermissionRepository().delete(id, tx);
 		});
+		await forgetSelectOptions();
 	},
 };

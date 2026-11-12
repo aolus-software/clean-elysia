@@ -33,7 +33,7 @@ Before writing a helper, a guard, a constant, or a response shape, check whether
 | `@guards` | `PermissionGuard`, `RoleGuard` (both `static canActivate(user, [...])`) |
 | `@errors` | `BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `UnprocessableEntityError`, `RateLimitError` |
 | `@default` | `StrongPassword`, `paginationLength`, `defaultSort`, `maxUploadFile`, `allowedFileMimeTypes`, `allowedImageMimeTypes`, token lifetimes |
-| `@cache` | `Cache` (`get`/`set`/`del`), `UserInformationCacheKey` |
+| `@cache` | `Cache` (`get`/`set`/`del`), `UserInformationCacheKey`, `PermissionSelectOptionsCacheKey`, `RoleSelectOptionsCacheKey`, `forgetSelectOptions`, `SELECT_OPTIONS_TTL_SECONDS` |
 | `@types` | `DatatableType`, `PaginationResponse`, `EmailOptions`, and the per-entity DTOs |
 
 If your thing is genuinely new and used from more than one place, it goes into a `src/libs/` bucket, not into a module — see `shared-code.md`.

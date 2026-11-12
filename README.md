@@ -55,7 +55,10 @@ Configure the following environment variables:
 - JWT secrets
 - Application settings
 
-See [Configuration Documentation](./docs/CONFIGURATION.md) for detailed reference.
+See [Configuration Documentation](./docs/CONFIGURATION.md) for detailed reference. The PostgreSQL
+pool is sized per process with `DB_POOL_MAX` / `DB_POOL_IDLE_TIMEOUT_MS` /
+`DB_POOL_CONNECTION_TIMEOUT_MS`, and `DB_LOG_QUERIES=true` (with `LOG_LEVEL=debug`) logs each SQL
+statement without its parameters.
 
 ## Database Setup
 
@@ -129,6 +132,9 @@ Build and run with Docker Compose:
 ```sh
 docker-compose up -d
 ```
+
+The `postgres` service logs every statement slower than `POSTGRES_SLOW_QUERY_MS` (default `100` ms,
+`-1` disables) to the container log: `docker compose logs postgres`.
 
 ## Project Structure
 

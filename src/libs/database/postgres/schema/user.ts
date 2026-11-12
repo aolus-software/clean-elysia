@@ -1,9 +1,10 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
 	index,
 	pgEnum,
 	pgTable,
 	timestamp,
+	uniqueIndex,
 	uuid,
 	varchar,
 } from "drizzle-orm/pg-core";
@@ -54,6 +55,12 @@ export const users = pgTable(
 			table.deleted_at,
 			table.status,
 		),
+		uniqueIndex("users_email_unique_live")
+			.on(table.email)
+			.where(sql`${table.deleted_at} IS NULL`),
+		index("users_created_at_live_index")
+			.on(table.created_at)
+			.where(sql`${table.deleted_at} IS NULL`),
 	],
 );
 

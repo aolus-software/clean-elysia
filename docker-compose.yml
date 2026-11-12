@@ -37,6 +37,12 @@ services:
     image: postgres:18.1
     container_name: elysia-postgres
     restart: unless-stopped
+    command:
+      [
+        "postgres",
+        "-c",
+        "log_min_duration_statement=${POSTGRES_SLOW_QUERY_MS:-100}",
+      ]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-elysia_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}

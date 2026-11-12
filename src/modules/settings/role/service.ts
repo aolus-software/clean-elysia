@@ -1,3 +1,4 @@
+import { forgetSelectOptions } from "@cache";
 import { db } from "@database";
 import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
@@ -24,9 +25,11 @@ export const RoleService = {
 
 		/* Two tables — roles and role_permissions — so the write is one
 		   transaction owned here, not in the repository. */
-		return await db.transaction(async (tx) => {
+		const result = await db.transaction(async (tx) => {
 			return await RoleRepository().create(data, tx);
 		});
+		await forgetSelectOptions();
+		return result;
 	},
 
 	findOne: async (id: string) => {
@@ -57,9 +60,11 @@ export const RoleService = {
 			]);
 		}
 
-		return await db.transaction(async (tx) => {
+		const result = await db.transaction(async (tx) => {
 			return await RoleRepository().update(id, data, tx);
 		});
+		await forgetSelectOptions();
+		return result;
 	},
 
 	delete: async (id: string) => {
@@ -68,8 +73,10 @@ export const RoleService = {
 			throw new NotFoundError(t("role.notFound"));
 		}
 
-		return await db.transaction(async (tx) => {
+		const result = await db.transaction(async (tx) => {
 			return await RoleRepository().delete(id, tx);
 		});
+		await forgetSelectOptions();
+		return result;
 	},
 };

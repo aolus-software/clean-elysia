@@ -1,6 +1,24 @@
 import "dotenv/config";
 
-import { bool, cleanEnv, host, num, port, str, url } from "envalid";
+import {
+	bool,
+	cleanEnv,
+	EnvError,
+	host,
+	makeValidator,
+	num,
+	port,
+	str,
+	url,
+} from "envalid";
+
+const positiveInt = makeValidator<number>((input) => {
+	const value = Number(input);
+	if (!Number.isInteger(value) || value < 1) {
+		throw new EnvError(`Expected an integer >= 1, got "${input}"`);
+	}
+	return value;
+});
 
 /**
  * Validates and parses all required environment variables at startup.
@@ -43,6 +61,10 @@ export const env = cleanEnv(process.env, {
 	DATABASE_URL: str({
 		default: "postgres://user:password@localhost:5432/mydb",
 	}),
+	DB_POOL_MAX: positiveInt({ default: 10 }),
+	DB_POOL_IDLE_TIMEOUT_MS: positiveInt({ default: 30000 }),
+	DB_POOL_CONNECTION_TIMEOUT_MS: positiveInt({ default: 5000 }),
+	DB_LOG_QUERIES: bool({ default: false }),
 
 	// Redis
 	REDIS_HOST: host({ default: "localhost" }),

@@ -83,6 +83,14 @@ export const users = pgTable(
   and every read filters `isNull(<table>.deleted_at)` — see [repositories.md](./repositories.md).
 - Add a composite index covering the columns queried together. `users` indexes
   `(email, deleted_at, status)` because that is exactly what the auth lookup filters on.
+- `users_email_unique_live` — partial unique index on `email WHERE deleted_at IS NULL`. It backs the
+  service's `findLiveByEmail` check (422) against races; a soft-deleted row keeps its email without
+  blocking re-registration.
+- `users_created_at_live_index` — partial index on `created_at WHERE deleted_at IS NULL`, the default
+  user list order (`defaultSort = "createdAt"`).
+- `user_roles_role_id_index` and `role_permissions_permission_id_index` — the composite primary keys
+  lead with `user_id` / `role_id`, so lookups by the second column ("who holds this role", "which roles
+  grant this permission", and the `ON DELETE CASCADE` from `roles` / `permissions`) need their own.
 
 ## Foreign keys and cascade
 
