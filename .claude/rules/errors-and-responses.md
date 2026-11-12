@@ -5,7 +5,7 @@ responses with `ResponseToolkit`; failures are *thrown* and `ErrorHandlerPlugin`
 
 - Envelope + toolkit: `src/libs/utils/elysia/response.ts` (exported via `@utils`)
 - Error classes: `src/libs/errors/` (exported via `@errors`)
-- Mapping: `src/libs/plugins/error-handler.plugin.ts`, registered on the root app in `src/server.ts`
+- Mapping: `src/libs/plugins/error-handler.plugin.ts`, registered on the root app in `src/app.ts`
 
 ## The envelope
 

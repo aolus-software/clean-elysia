@@ -69,15 +69,15 @@ The order is a dependency chain, not a preference: `RequestPlugin` first so a re
 `LoggerPlugin` to attach, `LocalePlugin` before anything that emits a translated string, `DiPlugin`
 in place before a handler resolves from the container. Don't reorder without tracing what reads what.
 
-`src/server.ts` composes the root instance separately:
+`src/app.ts` composes the root instance separately, and `src/server.ts` only calls `.listen(...)`
+on it (the test suite drives the same instance through `app.handle(...)`):
 
 ```ts
-const app = new Elysia()
+export const app = new Elysia()
 	.use(LocalePlugin)
 	.use(DocsPlugin)
 	.use(ErrorHandlerPlugin)
-	.use(bootstraps)
-	.listen(...);
+	.use(bootstraps);
 ```
 
 `DocsPlugin` and `ErrorHandlerPlugin` live here, not in `baseApp` — the error handler is declared
@@ -85,7 +85,7 @@ const app = new Elysia()
 appears in both places; Elysia's name-based dedupe makes the second `.use` a no-op.
 
 **A new global plugin goes in `baseApp`**, not into each module by hand. A plugin that must wrap the
-whole app including the docs and error layers goes in `src/server.ts`.
+whole app including the docs and error layers goes in `src/app.ts`.
 
 ## `AuthPlugin` is opt-in, and it does not carry `baseApp`
 

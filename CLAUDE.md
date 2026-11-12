@@ -15,6 +15,10 @@ bun run lint                 # eslint . --ext .ts,.js
 bun run lint:fix
 bun run format               # prettier --write .
 bun run typecheck            # tsc --noEmit (strict; noUnusedLocals/Parameters on)
+bun run test                 # bun test (unit + integration; integration needs TEST_DATABASE_URL + Redis)
+bun run test:unit            # tests/unit only, no database
+bun run test:integration     # tests/integration only
+bun run test:coverage        # coverage + total line gate (tests/coverage-gate.ts), what CI runs
 ```
 
 Database (Drizzle, PostgreSQL — schema at `src/libs/database/postgres/schema/index.ts`, migrations at `src/libs/database/postgres/migrations`):
@@ -31,14 +35,14 @@ bun run db:clickhouse:status
 
 Combined workflows in the `Makefile`: `make fresh` (db:drop + db:migrate + db:seed; `db:drop` drops the `public` and `drizzle` schemas and refuses to run in production), `make reset` (db:generate + db:migrate + db:seed).
 
-No test runner is configured. Don't invent `bun test` commands unless tests have been added.
+Tests use Bun's built-in runner (`bunfig.toml` preloads `tests/setup.ts`). Integration tests refuse any database whose name does not end in `_test`, mock `@bull` so no worker boots, and drive the app in-process via `app.handle(...)`. Read `.claude/rules/testing.md` before touching `tests/`.
 
 ## Architecture
 
 ### Bootstrap order
 
-1. `src/index.ts` calls `bootstrap()` (from `src/bootstrap.ts`) **before** building the Elysia app. `bootstrap()` registers every service into the DI container (`@plugins` → `container`). Any new service that resolves via `container.resolve(...)` must be registered there.
-2. The root `Elysia` instance chains `DocsPlugin` → `ErrorHandlerPlugin` → `bootstraps` (the module tree from `src/modules/index.ts`) → `.listen(AppConfig.APP_PORT)`.
+1. `src/index.ts` imports `src/server.ts`, which imports `src/app.ts`; `app.ts` calls `bootstrap()` (from `src/bootstrap.ts`) **before** building the Elysia app. `bootstrap()` registers every service into the DI container (`@plugins` → `container`). Any new service that resolves via `container.resolve(...)` must be registered there.
+2. The root `Elysia` instance in `src/app.ts` chains `LocalePlugin` → `DocsPlugin` → `ErrorHandlerPlugin` → `bootstraps` (the module tree from `src/modules/index.ts`) and is exported unlistened; `src/server.ts` calls `.listen(AppConfig.APP_PORT)` on it, and the tests call `app.handle(...)`.
 3. `src/base.ts` exports `baseApp` — a named Elysia instance (`name: "base-app"`) that bundles cross-cutting plugins (`RequestPlugin`, `LoggerPlugin`, `PerformancePlugin`, `DiPlugin`, `BodyLimitPlugin`, `SecurityPlugin`). Feature modules `.use(baseApp)` to inherit these. Auth-gated routes additionally `.use(AuthPlugin)`.
 
 ### Layering (clean architecture)
@@ -129,6 +133,7 @@ Before touching the corresponding area, read the matching rule file:
 - Repositories → `.claude/rules/repositories.md`
 - OpenAPI / Swagger / route docs → `.claude/rules/openapi.md`
 - BullMQ queues and workers (`src/bull/`) → `.claude/rules/queue.md`
+- Tests (`tests/`) → `.claude/rules/testing.md`
 - DI container usage → `.claude/rules/di.md`
 
 ## Docs

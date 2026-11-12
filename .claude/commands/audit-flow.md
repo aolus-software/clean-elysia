@@ -138,5 +138,6 @@ reached** rather than letting silence imply they were clean.
 - **Cite `file:line` for every finding.** No finding without a location.
 - **Explain, don't just point.** A finding a reader must open the code to understand has not been
   written yet.
-- **There is no test runner configured.** Do not report test results, and treat an unguarded
-  invariant with no test as a finding in its own right rather than something you can verify by running.
+- **The test suite is thin** (`.claude/rules/testing.md`). Audits are read-only and do not run it;
+  treat an invariant the suite does not exercise as unguarded, and never cite a test as proof for code
+  it does not reach.

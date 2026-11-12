@@ -1,0 +1,5 @@
+[test]
+preload = ["./tests/setup.ts"]
+coverageSkipTestFiles = true
+coverageReporter = ["text", "lcov"]
+coveragePathIgnorePatterns = ["tests/**", "src/libs/database/**/scripts/**", "src/libs/database/**/seed/index.ts"]
